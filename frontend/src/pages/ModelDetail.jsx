@@ -11,30 +11,56 @@ const ModelDetail = () => {
   const [newProperty, setNewProperty] = useState({ name: '', type: 'string', required: false, description: '' })
   const [currentDomain, setCurrentDomain] = useState(null)
   const [modelName, setModelName] = useState('')
+  
+  // 数据源相关状态
+  const [datasources, setDatasources] = useState([])
+  const [isDatasourceModalOpen, setIsDatasourceModalOpen] = useState(false)
+  const [editingDatasource, setEditingDatasource] = useState(null)
+  const [newDatasource, setNewDatasource] = useState({
+    name: '',
+    type: 'mysql',
+    url: '',
+    tableName: '',
+    status: 'inactive',
+    description: ''
+  })
+  
+  // 数据相关状态
+  const [dataRecords, setDataRecords] = useState([])
+  const [isDataModalOpen, setIsDataModalOpen] = useState(false)
+  const [editingData, setEditingData] = useState(null)
+  const [newData, setNewData] = useState({})
+  
+  // 语义/指标相关状态
+  const [semanticIndicators, setSemanticIndicators] = useState([])
+  const [boundIndicators, setBoundIndicators] = useState([])
+  const [isIndicatorModalOpen, setIsIndicatorModalOpen] = useState(false)
+  const [editingIndicator, setEditingIndicator] = useState(null)
+  const [newIndicator, setNewIndicator] = useState({
+    name: '',
+    expression: '',
+    returnType: 'number',
+    description: ''
+  })
 
   // 从API获取数据
   useEffect(() => {
-    // 获取属性列表
-    fetch(`/api/property?modelId=${modelId}`)
-      .then(response => response.json())
-      .then(propertyData => {
-        setProperties(propertyData)
-      })
-      .catch(error => console.error('Failed to fetch properties:', error))
-
-    // 获取关系列表
-    fetch(`/api/relation?modelId=${modelId}`)
-      .then(response => response.json())
-      .then(relationData => {
-        setRelations(relationData)
-      })
-      .catch(error => console.error('Failed to fetch relations:', error))
+    // 首先设置默认模型数据，避免面包屑显示异常
+    setModel({
+      id: parseInt(modelId),
+      name: '加载中...',
+      description: '',
+      domainId: 0,
+      domainName: '加载中...'
+    })
 
     // 获取模型数据
     fetch('/api/model')
       .then(response => response.json())
       .then(data => {
-        const foundModel = data.find(m => m.id === parseInt(modelId))
+        // 处理API返回的数据格式，兼容数组或包含models和edges的对象
+        const models = Array.isArray(data) ? data : data.models || []
+        const foundModel = models.find(m => m.id === parseInt(modelId))
         if (foundModel) {
           setModelName(foundModel.name)
           // 获取域数据
@@ -51,10 +77,85 @@ const ModelDetail = () => {
                 domainName: domain?.name || `域ID: ${foundModel.domainId}`
               })
             })
-            .catch(error => console.error('Failed to fetch domains:', error))
+            .catch(error => {
+              console.error('Failed to fetch domains:', error)
+              // 即使域数据获取失败，也要设置模型基本信息
+              setModel({
+                id: parseInt(modelId),
+                name: foundModel.name,
+                description: foundModel.description,
+                domainId: foundModel.domainId,
+                domainName: `域ID: ${foundModel.domainId}`
+              })
+            })
+        } else {
+          // 模型不存在时的处理
+          setModel({
+            id: parseInt(modelId),
+            name: `模型ID: ${modelId}`,
+            description: '模型不存在',
+            domainId: 0,
+            domainName: '未知域'
+          })
         }
       })
-      .catch(error => console.error('Failed to fetch models:', error))
+      .catch(error => {
+        console.error('Failed to fetch models:', error)
+        // API调用失败时的处理
+        setModel({
+          id: parseInt(modelId),
+          name: `模型ID: ${modelId}`,
+          description: '获取模型失败',
+          domainId: 0,
+          domainName: '未知域'
+        })
+      })
+
+    // 获取属性列表
+    fetch(`/api/property?modelId=${modelId}`)
+      .then(response => response.json())
+      .then(propertyData => {
+        setProperties(propertyData)
+      })
+      .catch(error => console.error('Failed to fetch properties:', error))
+
+    // 获取关系列表
+    fetch(`/api/relation?modelId=${modelId}`)
+      .then(response => response.json())
+      .then(relationData => {
+        setRelations(relationData)
+      })
+      .catch(error => console.error('Failed to fetch relations:', error))
+    
+    // 模拟获取数据源数据
+    const mockDatasources = [
+      { id: 1, name: 'MySQL数据库', type: 'mysql', url: 'jdbc:mysql://localhost:3306/expressway', tableName: 't_vehicle', status: 'active', description: '车辆信息表' },
+      { id: 2, name: 'Oracle数据库', type: 'oracle', url: 'jdbc:oracle:thin:@localhost:1521:ORCL', tableName: 't_pass_record', status: 'active', description: '通行记录表' },
+      { id: 3, name: 'Kafka消息队列', type: 'kafka', url: 'localhost:9092', tableName: 'pass_events', status: 'inactive', description: '通行事件流' }
+    ]
+    setDatasources(mockDatasources)
+    
+    // 模拟获取数据记录
+    const mockDataRecords = [
+      { id: 1, licensePlate: '京A12345', vehicleType: '小型客车', entryTime: '2025-12-19 08:00:00', exitTime: '2025-12-19 08:30:00', tollFee: 50.0 },
+      { id: 2, licensePlate: '沪B67890', vehicleType: '大型货车', entryTime: '2025-12-19 08:15:00', exitTime: '2025-12-19 09:00:00', tollFee: 120.0 },
+      { id: 3, licensePlate: '粤C54321', vehicleType: '小型客车', entryTime: '2025-12-19 08:30:00', exitTime: '2025-12-19 09:15:00', tollFee: 80.0 }
+    ]
+    setDataRecords(mockDataRecords)
+    
+    // 模拟获取语义/指标数据
+    const mockSemanticIndicators = [
+      { id: 1, name: '平均通行费用', expression: 'SUM(账单金额)/COUNT(通行记录)', returnType: 'number', description: '计算平均通行费用', status: 'published' },
+      { id: 2, name: '路段车流量', expression: 'COUNT(通行记录 WHERE 路段ID=?)', returnType: 'number', description: '计算路段车流量', status: 'draft' },
+      { id: 3, name: '车型占比', expression: 'COUNT(车辆信息 WHERE 车型=?)/COUNT(车辆信息)', returnType: 'number', description: '计算车型占比', status: 'published' }
+    ]
+    setSemanticIndicators(mockSemanticIndicators)
+    
+    // 模拟获取已绑定的指标
+    const mockBoundIndicators = [
+      { id: 1, name: '平均通行费用', expression: 'SUM(账单金额)/COUNT(通行记录)', returnType: 'number', description: '计算平均通行费用', status: 'published' }
+    ]
+    setBoundIndicators(mockBoundIndicators)
   }, [modelId])
 
   // 处理新建属性
@@ -80,13 +181,149 @@ const ModelDetail = () => {
 
   // 处理删除属性
   const handleDeleteProperty = (id) => {
-    fetch(`/api/property/${id}`, {
-      method: 'DELETE'
-    })
+    fetch(`/api/property/${id}`, { method: 'DELETE' })
       .then(() => {
         setProperties(properties.filter(property => property.id !== id))
       })
       .catch(error => console.error('Failed to delete property:', error))
+  }
+  
+  // 数据源处理函数
+  const handleCreateDatasource = () => {
+    // 实际项目中应该调用API
+    const datasource = {
+      id: datasources.length + 1,
+      ...newDatasource
+    }
+    setDatasources([...datasources, datasource])
+    setIsDatasourceModalOpen(false)
+    setNewDatasource({
+      name: '',
+      type: 'mysql',
+      url: '',
+      tableName: '',
+      status: 'inactive',
+      description: ''
+    })
+  }
+  
+  const handleEditDatasource = (datasource) => {
+    setEditingDatasource(datasource)
+    setNewDatasource(datasource)
+    setIsDatasourceModalOpen(true)
+  }
+  
+  const handleUpdateDatasource = () => {
+    // 实际项目中应该调用API
+    setDatasources(datasources.map(datasource => 
+      datasource.id === editingDatasource.id ? newDatasource : datasource
+    ))
+    setIsDatasourceModalOpen(false)
+    setEditingDatasource(null)
+    setNewDatasource({
+      name: '',
+      type: 'mysql',
+      url: '',
+      tableName: '',
+      status: 'inactive',
+      description: ''
+    })
+  }
+  
+  const handleDeleteDatasource = (id) => {
+    // 实际项目中应该调用API
+    setDatasources(datasources.filter(datasource => datasource.id !== id))
+  }
+  
+  const handleToggleDatasource = (id) => {
+    // 实际项目中应该调用API
+    setDatasources(datasources.map(datasource => 
+      datasource.id === id ? { ...datasource, status: datasource.status === 'active' ? 'inactive' : 'active' } : datasource
+    ))
+  }
+  
+  const handleSaveDatasource = () => {
+    if (editingDatasource) {
+      handleUpdateDatasource()
+    } else {
+      handleCreateDatasource()
+    }
+  }
+  
+  // 数据处理函数
+  const handleCreateData = () => {
+    // 实际项目中应该调用API
+    const data = {
+      id: dataRecords.length + 1,
+      ...newData,
+      createdAt: new Date().toISOString()
+    }
+    setDataRecords([...dataRecords, data])
+    setIsDataModalOpen(false)
+    setNewData({})
+  }
+  
+  const handleEditData = (record) => {
+    setEditingData(record)
+    setNewData(record)
+    setIsDataModalOpen(true)
+  }
+  
+  const handleUpdateData = () => {
+    // 实际项目中应该调用API
+    setDataRecords(dataRecords.map(record => 
+      record.id === editingData.id ? newData : record
+    ))
+    setIsDataModalOpen(false)
+    setEditingData(null)
+    setNewData({})
+  }
+  
+  const handleDeleteData = (id) => {
+    // 实际项目中应该调用API
+    setDataRecords(dataRecords.filter(record => record.id !== id))
+  }
+  
+  const handleSaveData = () => {
+    if (editingData) {
+      handleUpdateData()
+    } else {
+      handleCreateData()
+    }
+  }
+  
+  // 语义/指标处理函数
+  const handleBindIndicator = (indicator) => {
+    // 实际项目中应该调用API
+    if (!boundIndicators.find(b => b.id === indicator.id)) {
+      setBoundIndicators([...boundIndicators, indicator])
+    }
+  }
+  
+  const handleUnbindIndicator = (id) => {
+    // 实际项目中应该调用API
+    setBoundIndicators(boundIndicators.filter(indicator => indicator.id !== id))
+  }
+  
+  const handleCreateIndicator = () => {
+    // 实际项目中应该调用API
+    const indicator = {
+      id: semanticIndicators.length + 1,
+      ...newIndicator,
+      status: 'draft'
+    }
+    setSemanticIndicators([...semanticIndicators, indicator])
+    setIsIndicatorModalOpen(false)
+    setNewIndicator({
+      name: '',
+      expression: '',
+      returnType: 'number',
+      description: ''
+    })
+  }
+  
+  const handleSaveIndicator = () => {
+    handleCreateIndicator()
   }
 
   return (
@@ -194,11 +431,173 @@ const ModelDetail = () => {
           </>
         )}
 
-        {/* 其他Tab内容（占位） */}
-        {(activeTab === 'datasource' || activeTab === 'data' || activeTab === 'semantic') && (
-          <div style={{ padding: '16px', textAlign: 'center', color: '#666' }}>
-            <h3>{activeTab === 'datasource' ? '数据源' : activeTab === 'data' ? '数据' : '语义/指标'}</h3>
-            <p>功能开发中...</p>
+        {/* 数据源Tab */}
+        {activeTab === 'datasource' && (
+          <>
+            <div className="header-toolbar">
+              <input type="text" placeholder="搜索数据源名称..." />
+              <button onClick={() => setIsDatasourceModalOpen(true)}>新建数据源</button>
+              <button>导入</button>
+              <button>导出</button>
+            </div>
+            <div className="table-container">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>名称</th>
+                    <th>类型</th>
+                    <th>URL</th>
+                    <th>表名</th>
+                    <th>状态</th>
+                    <th>描述</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {datasources.map(datasource => (
+                    <tr key={datasource.id}>
+                      <td>{datasource.name}</td>
+                      <td>{datasource.type}</td>
+                      <td>{datasource.url}</td>
+                      <td>{datasource.tableName}</td>
+                      <td>
+                        <span className={`status-badge ${datasource.status}`}>
+                          {datasource.status === 'active' ? '已启用' : '已停用'}
+                        </span>
+                      </td>
+                      <td>{datasource.description}</td>
+                      <td>
+                        <button className="edit" onClick={() => handleEditDatasource(datasource)}>编辑</button>
+                        <button className="delete" onClick={() => handleDeleteDatasource(datasource.id)}>删除</button>
+                        <button 
+                          className={`toggle ${datasource.status}`}
+                          onClick={() => handleToggleDatasource(datasource.id)}
+                        >
+                          {datasource.status === 'active' ? '停用' : '启用'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+
+        {/* 数据Tab */}
+        {activeTab === 'data' && (
+          <>
+            <div className="header-toolbar">
+              <input type="text" placeholder="搜索数据..." />
+              <button onClick={() => setIsDataModalOpen(true)}>新增数据</button>
+              <button>刷新</button>
+            </div>
+            <div className="table-container">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    {dataRecords.length > 0 && Object.keys(dataRecords[0]).map(key => (
+                      <th key={key}>{key}</th>
+                    ))}
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dataRecords.map(record => (
+                    <tr key={record.id}>
+                      {Object.values(record).map((value, index) => (
+                        <td key={index}>{value}</td>
+                      ))}
+                      <td>
+                        <button className="edit" onClick={() => handleEditData(record)}>编辑</button>
+                        <button className="delete" onClick={() => handleDeleteData(record.id)}>删除</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+
+        {/* 语义/指标Tab */}
+        {activeTab === 'semantic' && (
+          <div style={{ display: 'flex', gap: '24px', padding: '16px' }}>
+            {/* 可用指标 */}
+            <div style={{ flex: 1, backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}>
+              <div style={{ padding: '16px', borderBottom: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3>可用指标</h3>
+                <button onClick={() => setIsIndicatorModalOpen(true)}>新建指标</button>
+              </div>
+              <div style={{ padding: '16px' }}>
+                {semanticIndicators.map(indicator => (
+                  <div key={indicator.id} style={{ marginBottom: '12px', padding: '12px', border: '1px solid #e0e0e0', borderRadius: '4px', backgroundColor: '#fafafa' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                      <div>
+                        <h4 style={{ margin: 0 }}>{indicator.name}</h4>
+                        <p style={{ margin: '4px 0', fontSize: '12px', color: '#666' }}>{indicator.description}</p>
+                      </div>
+                      <span className={`status-badge ${indicator.status}`} style={{ fontSize: '12px', padding: '2px 8px' }}>
+                        {indicator.status === 'published' ? '已发布' : '草稿'}
+                      </span>
+                    </div>
+                    <div style={{ marginBottom: '8px' }}>
+                      <strong>表达式:</strong> <code>{indicator.expression}</code>
+                    </div>
+                    <div style={{ marginBottom: '8px' }}>
+                      <strong>返回类型:</strong> {indicator.returnType}
+                    </div>
+                    <button 
+                      onClick={() => handleBindIndicator(indicator)}
+                      disabled={boundIndicators.find(b => b.id === indicator.id)}
+                      style={{ fontSize: '12px', padding: '4px 12px', backgroundColor: '#1890ff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                    >
+                      {boundIndicators.find(b => b.id === indicator.id) ? '已绑定' : '绑定'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 已绑定指标 */}
+            <div style={{ flex: 1, backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}>
+              <div style={{ padding: '16px', borderBottom: '1px solid #e0e0e0' }}>
+                <h3>已绑定指标</h3>
+              </div>
+              <div style={{ padding: '16px' }}>
+                {boundIndicators.length === 0 ? (
+                  <div style={{ textAlign: 'center', color: '#999', padding: '24px 0' }}>
+                    暂无绑定的指标
+                  </div>
+                ) : (
+                  boundIndicators.map(indicator => (
+                    <div key={indicator.id} style={{ marginBottom: '12px', padding: '12px', border: '1px solid #e0e0e0', borderRadius: '4px', backgroundColor: '#fafafa' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                        <div>
+                          <h4 style={{ margin: 0 }}>{indicator.name}</h4>
+                          <p style={{ margin: '4px 0', fontSize: '12px', color: '#666' }}>{indicator.description}</p>
+                        </div>
+                        <span className={`status-badge ${indicator.status}`} style={{ fontSize: '12px', padding: '2px 8px' }}>
+                          {indicator.status === 'published' ? '已发布' : '草稿'}
+                        </span>
+                      </div>
+                      <div style={{ marginBottom: '8px' }}>
+                        <strong>表达式:</strong> <code>{indicator.expression}</code>
+                      </div>
+                      <div style={{ marginBottom: '8px' }}>
+                        <strong>返回类型:</strong> {indicator.returnType}
+                      </div>
+                      <button 
+                        onClick={() => handleUnbindIndicator(indicator.id)}
+                        style={{ fontSize: '12px', padding: '4px 12px', backgroundColor: '#ff4d4f', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                      >
+                        解绑
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -249,6 +648,149 @@ const ModelDetail = () => {
             <div className="form-actions">
               <button className="cancel" onClick={() => setIsPropertyModalOpen(false)}>取消</button>
               <button className="submit" onClick={handleCreateProperty}>确定</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 数据源模态框 */}
+      {isDatasourceModalOpen && (
+        <div className="modal">
+          <div className="modal-content">
+            <h2>{editingDatasource ? '编辑数据源' : '新建数据源'}</h2>
+            <div className="form-group">
+              <label>名称</label>
+              <input
+                type="text"
+                value={newDatasource.name}
+                onChange={(e) => setNewDatasource({ ...newDatasource, name: e.target.value })}
+              />
+            </div>
+            <div className="form-group">
+              <label>类型</label>
+              <select
+                value={newDatasource.type}
+                onChange={(e) => setNewDatasource({ ...newDatasource, type: e.target.value })}
+              >
+                <option value="mysql">MySQL</option>
+                <option value="oracle">Oracle</option>
+                <option value="kafka">Kafka</option>
+                <option value="api">API</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label>URL</label>
+              <input
+                type="text"
+                value={newDatasource.url}
+                onChange={(e) => setNewDatasource({ ...newDatasource, url: e.target.value })}
+                placeholder="例如: jdbc:mysql://localhost:3306/expressway"
+              />
+            </div>
+            <div className="form-group">
+              <label>表名/主题名</label>
+              <input
+                type="text"
+                value={newDatasource.tableName}
+                onChange={(e) => setNewDatasource({ ...newDatasource, tableName: e.target.value })}
+              />
+            </div>
+            <div className="form-group">
+              <label>描述</label>
+              <textarea
+                value={newDatasource.description}
+                onChange={(e) => setNewDatasource({ ...newDatasource, description: e.target.value })}
+                placeholder="数据源描述"
+              ></textarea>
+            </div>
+            <div className="form-actions">
+              <button className="cancel" onClick={() => {
+                setIsDatasourceModalOpen(false);
+                setEditingDatasource(null);
+                setNewDatasource({ name: '', type: 'mysql', url: '', tableName: '', status: 'inactive', description: '' });
+              }}>取消</button>
+              <button className="submit" onClick={handleSaveDatasource}>确定</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 数据模态框 */}
+      {isDataModalOpen && (
+        <div className="modal">
+          <div className="modal-content">
+            <h2>{editingData ? '编辑数据' : '新增数据'}</h2>
+            {dataRecords.length > 0 && Object.keys(dataRecords[0]).map(key => (
+              <div key={key} className="form-group">
+                <label>{key}</label>
+                <input
+                  type="text"
+                  value={newData[key] || ''}
+                  onChange={(e) => setNewData({ ...newData, [key]: e.target.value })}
+                  disabled={key === 'id'}
+                />
+              </div>
+            ))}
+            <div className="form-actions">
+              <button className="cancel" onClick={() => {
+                setIsDataModalOpen(false);
+                setEditingData(null);
+                setNewData({});
+              }}>取消</button>
+              <button className="submit" onClick={handleSaveData}>确定</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 语义/指标模态框 */}
+      {isIndicatorModalOpen && (
+        <div className="modal">
+          <div className="modal-content">
+            <h2>新建语义/指标</h2>
+            <div className="form-group">
+              <label>名称</label>
+              <input
+                type="text"
+                value={newIndicator.name}
+                onChange={(e) => setNewIndicator({ ...newIndicator, name: e.target.value })}
+              />
+            </div>
+            <div className="form-group">
+              <label>表达式</label>
+              <textarea
+                value={newIndicator.expression}
+                onChange={(e) => setNewIndicator({ ...newIndicator, expression: e.target.value })}
+                placeholder="例如: SUM(账单金额)/COUNT(通行记录)"
+                style={{ height: '80px' }}
+              ></textarea>
+            </div>
+            <div className="form-group">
+              <label>返回类型</label>
+              <select
+                value={newIndicator.returnType}
+                onChange={(e) => setNewIndicator({ ...newIndicator, returnType: e.target.value })}
+              >
+                <option value="number">数字</option>
+                <option value="string">字符串</option>
+                <option value="boolean">布尔值</option>
+                <option value="date">日期</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label>描述</label>
+              <textarea
+                value={newIndicator.description}
+                onChange={(e) => setNewIndicator({ ...newIndicator, description: e.target.value })}
+                placeholder="指标描述"
+              ></textarea>
+            </div>
+            <div className="form-actions">
+              <button className="cancel" onClick={() => {
+                setIsIndicatorModalOpen(false);
+                setNewIndicator({ name: '', expression: '', returnType: 'number', description: '' });
+              }}>取消</button>
+              <button className="submit" onClick={handleSaveIndicator}>确定</button>
             </div>
           </div>
         </div>

@@ -143,7 +143,10 @@ def get_models():
             "models": models,
             "edges": edges
         })
-    return jsonify(mock_data["models"])
+    return jsonify({
+        "models": mock_data["models"],
+        "edges": mock_data["model_edges"]
+    })
 
 @app.route('/api/model', methods=['POST'])
 def create_model():

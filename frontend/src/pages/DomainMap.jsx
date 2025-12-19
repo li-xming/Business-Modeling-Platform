@@ -25,10 +25,14 @@ const DomainMap = () => {
         fetch('/api/model')
           .then(response => response.json())
           .then(modelData => {
+            // 处理模型数据和边数据
+            const allModels = modelData.models || modelData
+            const modelEdges = modelData.edges || []
+            
             setAllData({
               domains: domainData.domains,
-              models: modelData,
-              edges: domainData.edges
+              models: allModels,
+              edges: [...domainData.edges, ...modelEdges]
             })
             setDomains(domainData.domains)
             setEdges(domainData.edges)
@@ -50,26 +54,58 @@ const DomainMap = () => {
     // 清除旧的图形
     svg.selectAll('*').remove()
 
-    // 准备数据
-    let nodes = [...allData.domains]
-    let links = [...allData.edges]
+    // 准备数据，为不同类型节点添加唯一ID前缀
+    let nodes = []
+    let links = []
+
+    // 处理业务域节点，添加domain_前缀
+    allData.domains.forEach(domain => {
+      nodes.push({
+        ...domain,
+        originalId: domain.id,
+        id: `domain_${domain.id}`,
+        type: 'domain'
+      })
+    })
+
+    // 处理域之间的边，确保只添加存在的节点之间的边
+    const domainIds = new Set(allData.domains.map(domain => domain.id))
+    allData.edges.forEach(edge => {
+      // 只添加两个节点都存在的边
+      if (domainIds.has(edge.source) && domainIds.has(edge.target)) {
+        links.push({
+          source: `domain_${edge.source}`,
+          target: `domain_${edge.target}`
+        })
+      }
+    })
 
     if (isExpanded) {
-      // 展开到模型级别
-      nodes = [...nodes, ...allData.models]
-      
-      // 添加域到模型的边
+      // 展开到模型级别，为模型节点添加model_前缀
       allData.models.forEach(model => {
+        nodes.push({
+          ...model,
+          originalId: model.id,
+          id: `model_${model.id}`,
+          type: 'model'
+        })
+        
+        // 添加域到模型的边
         links.push({
-          source: model.domainId,
-          target: model.id
+          source: `domain_${model.domainId}`,
+          target: `model_${model.id}`
         })
       })
       
-      // 添加模型之间的边（如果有）
-      // 这里假设模型之间的边也在edges数据中
+      // 处理模型之间的边
+      allData.modelsEdges?.forEach(edge => {
+        links.push({
+          source: `model_${edge.source}`,
+          target: `model_${edge.target}`
+        })
+      })
     }
-
+    
     // 创建力导向模拟
     const simulation = d3.forceSimulation(nodes)
       .force('link', d3.forceLink(links).id(d => d.id).distance(isExpanded ? 100 : 150))
@@ -90,8 +126,8 @@ const DomainMap = () => {
       .selectAll('circle')
       .data(nodes)
       .enter().append('circle')
-      .attr('r', d => d.domainId ? 25 : 30) // 模型节点小一些
-      .attr('fill', d => d.domainId ? '#52c41a' : '#1890ff') // 模型节点绿色，域节点蓝色
+      .attr('r', d => d.type === 'model' ? 25 : 30) // 模型节点小一些
+      .attr('fill', d => d.type === 'model' ? '#52c41a' : '#1890ff') // 模型节点绿色，域节点蓝色
       .attr('stroke', '#fff')
       .attr('stroke-width', 2)
       .call(d3.drag()
@@ -106,33 +142,26 @@ const DomainMap = () => {
       .enter().append('text')
       .text(d => d.name)
       .attr('text-anchor', 'middle')
-      .attr('dy', d => d.domainId ? 3 : 4)
-      .attr('font-size', d => d.domainId ? 11 : 12)
+      .attr('dy', d => d.type === 'model' ? 3 : 4)
+      .attr('font-size', d => d.type === 'model' ? 11 : 12)
       .attr('fill', 'white')
       .style('pointer-events', 'none')
 
     // 鼠标事件处理
     node.on('click', (event, d) => {
       event.stopPropagation()
-      if (d.domainId) {
-        // 模型节点，显示详情
-        setHoveredDomain(d)
-        setIsDrawerVisible(!isDrawerVisible)
-      } else {
-        // 域节点，显示详情
-        setHoveredDomain(d)
-        setIsDrawerVisible(!isDrawerVisible)
-      }
+      setHoveredDomain(d)
+      setIsDrawerVisible(!isDrawerVisible)
     })
 
     node.on('dblclick', (event, d) => {
       event.stopPropagation()
-      if (d.domainId) {
+      if (d.type === 'model') {
         // 模型节点，跳转到模型详情
-        window.location.href = `/model/${d.id}`
+        window.location.href = `/model/${d.originalId}`
       } else {
         // 域节点，跳转到域工作台
-        window.location.href = `/domain/${d.id}`
+        window.location.href = `/domain/${d.originalId}`
       }
     })
 
