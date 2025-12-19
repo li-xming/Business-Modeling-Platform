@@ -11,6 +11,7 @@ const DomainMap = () => {
   const [newDomain, setNewDomain] = useState({ name: '', description: '', owner: '' })
   const [isExpanded, setIsExpanded] = useState(false)
   const [allData, setAllData] = useState({ domains: [], models: [], edges: [] })
+  const [hoveredNodeId, setHoveredNodeId] = useState(null)
   const svgRef = useRef(null)
   const containerRef = useRef(null)
   const timerRef = useRef(null)
@@ -111,50 +112,113 @@ const DomainMap = () => {
       .force('link', d3.forceLink(links).id(d => d.id).distance(isExpanded ? 100 : 150))
       .force('charge', d3.forceManyBody().strength(isExpanded ? -300 : -500))
       .force('center', d3.forceCenter(width / 2, height / 2))
+    
+    // 查找相关节点的函数
+    const findRelatedNodes = (nodeId) => {
+      const relatedNodeIds = new Set()
+      relatedNodeIds.add(nodeId)
+      
+      // 查找直接连接的节点
+      links.forEach(link => {
+        if (link.source.id === nodeId || link.target.id === nodeId) {
+          relatedNodeIds.add(link.source.id)
+          relatedNodeIds.add(link.target.id)
+        }
+      })
+      
+      return relatedNodeIds
+    }
+
+    // 添加渐变定义
+    const defs = svg.append('defs')
+    
+    // 业务域渐变
+    defs.append('linearGradient')
+      .attr('id', 'domainGradient')
+      .attr('x1', '0%')
+      .attr('y1', '0%')
+      .attr('x2', '100%')
+      .attr('y2', '100%')
+      .selectAll('stop')
+      .data([
+        { offset: '0%', color: '#3b82f6' },
+        { offset: '100%', color: '#2563eb' }
+      ])
+      .enter().append('stop')
+      .attr('offset', d => d.offset)
+      .attr('stop-color', d => d.color)
+    
+    // 模型渐变
+    defs.append('linearGradient')
+      .attr('id', 'modelGradient')
+      .attr('x1', '0%')
+      .attr('y1', '0%')
+      .attr('x2', '100%')
+      .attr('y2', '100%')
+      .selectAll('stop')
+      .data([
+        { offset: '0%', color: '#10b981' },
+        { offset: '100%', color: '#059669' }
+      ])
+      .enter().append('stop')
+      .attr('offset', d => d.offset)
+      .attr('stop-color', d => d.color)
+    
+    // 连线渐变
+    defs.append('linearGradient')
+      .attr('id', 'linkGradient')
+      .attr('x1', '0%')
+      .attr('y1', '0%')
+      .attr('x2', '100%')
+      .attr('y2', '0%')
+      .selectAll('stop')
+      .data([
+        { offset: '0%', color: '#3b82f6', opacity: 0.8 },
+        { offset: '100%', color: '#10b981', opacity: 0.8 }
+      ])
+      .enter().append('stop')
+      .attr('offset', d => d.offset)
+      .attr('stop-color', d => d.color)
+      .attr('stop-opacity', d => d.opacity)
 
     // 创建边
     const link = svg.append('g')
       .selectAll('line')
       .data(links)
       .enter().append('line')
-      .attr('stroke', '#999')
-      .attr('stroke-opacity', 0.6)
-      .attr('stroke-width', 1.5)
+      .attr('class', 'sci-fi-link')
 
-    // 创建节点
-    const node = svg.append('g')
-      .selectAll('circle')
+    // 创建节点组
+    const nodeGroup = svg.append('g')
+      .selectAll('g')
       .data(nodes)
-      .enter().append('circle')
-      .attr('r', d => d.type === 'model' ? 25 : 30) // 模型节点小一些
-      .attr('fill', d => d.type === 'model' ? '#52c41a' : '#1890ff') // 模型节点绿色，域节点蓝色
-      .attr('stroke', '#fff')
-      .attr('stroke-width', 2)
+      .enter().append('g')
+      .attr('class', d => `sci-fi-node ${d.type}-node`)
       .call(d3.drag()
         .on('start', dragstarted)
         .on('drag', dragged)
         .on('end', dragended))
 
+    // 添加节点圆圈
+    nodeGroup.append('circle')
+      .attr('r', d => d.type === 'model' ? 25 : 30) // 模型节点小一些
+
     // 节点文本
-    const nodeText = svg.append('g')
-      .selectAll('text')
-      .data(nodes)
-      .enter().append('text')
+    nodeGroup.append('text')
       .text(d => d.name)
       .attr('text-anchor', 'middle')
       .attr('dy', d => d.type === 'model' ? 3 : 4)
       .attr('font-size', d => d.type === 'model' ? 11 : 12)
       .attr('fill', 'white')
-      .style('pointer-events', 'none')
 
     // 鼠标事件处理
-    node.on('click', (event, d) => {
+    nodeGroup.on('click', (event, d) => {
       event.stopPropagation()
       setHoveredDomain(d)
       setIsDrawerVisible(!isDrawerVisible)
     })
 
-    node.on('dblclick', (event, d) => {
+    nodeGroup.on('dblclick', (event, d) => {
       event.stopPropagation()
       if (d.type === 'model') {
         // 模型节点，跳转到模型详情
@@ -163,6 +227,43 @@ const DomainMap = () => {
         // 域节点，跳转到域工作台
         window.location.href = `/domain/${d.originalId}`
       }
+    })
+    
+    // 鼠标悬停事件 - 高亮相关节点
+    nodeGroup.on('mouseover', (event, d) => {
+      const relatedNodeIds = findRelatedNodes(d.id)
+      
+      // 高亮当前节点和相关节点，其他节点置灰
+      nodeGroup.style('opacity', node => {
+        return relatedNodeIds.has(node.id) ? 1 : 0.2
+      })
+      
+      // 高亮当前节点和相关节点的圆圈和文本
+      nodeGroup.select('circle').style('opacity', node => {
+        return relatedNodeIds.has(node.id) ? 1 : 0.2
+      })
+      
+      nodeGroup.select('text').style('opacity', node => {
+        return relatedNodeIds.has(node.id) ? 1 : 0.2
+      })
+      
+      // 高亮相关边，其他边置灰
+      link.style('opacity', edge => {
+        return relatedNodeIds.has(edge.source.id) && relatedNodeIds.has(edge.target.id) ? 0.8 : 0.1
+      })
+    })
+    
+    // 鼠标移出事件 - 恢复所有节点和边的透明度
+    nodeGroup.on('mouseout', () => {
+      nodeGroup.style('opacity', 1)
+      nodeGroup.select('circle').style('opacity', 1)
+      nodeGroup.select('text').style('opacity', 1)
+      link.style('opacity', 0.8)
+    })
+    
+    // 添加画布点击事件，点击空白处收起信息窗
+    svg.on('click', () => {
+      setIsDrawerVisible(false)
     })
 
     // 力导向模拟更新
@@ -173,13 +274,8 @@ const DomainMap = () => {
         .attr('x2', d => d.target.x)
         .attr('y2', d => d.target.y)
 
-      node
-        .attr('cx', d => d.x)
-        .attr('cy', d => d.y)
-
-      nodeText
-        .attr('x', d => d.x)
-        .attr('y', d => d.y)
+      nodeGroup
+        .attr('transform', d => `translate(${d.x}, ${d.y})`)
     })
 
     // 拖拽函数
@@ -298,8 +394,8 @@ const DomainMap = () => {
             <p>负责人: {hoveredDomain.owner}</p>
             <p>最近变更: {hoveredDomain.updatedAt}</p>
             <button
-              style={{ marginTop: '16px', width: '100%' }}
-              onClick={() => window.location.href = `/domain/${hoveredDomain.id}`}
+              className="enter-domain-btn"
+              onClick={() => window.location.href = `/domain/${hoveredDomain.originalId}`}
             >
               进入该域
             </button>

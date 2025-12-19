@@ -522,83 +522,131 @@ const ModelDetail = () => {
 
         {/* 语义/指标Tab */}
         {activeTab === 'semantic' && (
-          <div style={{ display: 'flex', gap: '24px', padding: '16px' }}>
-            {/* 可用指标 */}
-            <div style={{ flex: 1, backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}>
-              <div style={{ padding: '16px', borderBottom: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3>可用指标</h3>
-                <button onClick={() => setIsIndicatorModalOpen(true)}>新建指标</button>
-              </div>
-              <div style={{ padding: '16px' }}>
-                {semanticIndicators.map(indicator => (
-                  <div key={indicator.id} style={{ marginBottom: '12px', padding: '12px', border: '1px solid #e0e0e0', borderRadius: '4px', backgroundColor: '#fafafa' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                      <div>
-                        <h4 style={{ margin: 0 }}>{indicator.name}</h4>
-                        <p style={{ margin: '4px 0', fontSize: '12px', color: '#666' }}>{indicator.description}</p>
-                      </div>
-                      <span className={`status-badge ${indicator.status}`} style={{ fontSize: '12px', padding: '2px 8px' }}>
-                        {indicator.status === 'published' ? '已发布' : '草稿'}
-                      </span>
-                    </div>
-                    <div style={{ marginBottom: '8px' }}>
-                      <strong>表达式:</strong> <code>{indicator.expression}</code>
-                    </div>
-                    <div style={{ marginBottom: '8px' }}>
-                      <strong>返回类型:</strong> {indicator.returnType}
-                    </div>
-                    <button 
-                      onClick={() => handleBindIndicator(indicator)}
-                      disabled={boundIndicators.find(b => b.id === indicator.id)}
-                      style={{ fontSize: '12px', padding: '4px 12px', backgroundColor: '#1890ff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                    >
-                      {boundIndicators.find(b => b.id === indicator.id) ? '已绑定' : '绑定'}
-                    </button>
-                  </div>
-                ))}
-              </div>
+          <>
+            <div className="header-toolbar">
+              <input type="text" placeholder="搜索指标名称..." />
+              <button onClick={() => setIsIndicatorModalOpen(true)}>新建指标</button>
+              <button>导入</button>
+              <button>导出</button>
             </div>
-
-            {/* 已绑定指标 */}
-            <div style={{ flex: 1, backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}>
-              <div style={{ padding: '16px', borderBottom: '1px solid #e0e0e0' }}>
-                <h3>已绑定指标</h3>
-              </div>
-              <div style={{ padding: '16px' }}>
-                {boundIndicators.length === 0 ? (
-                  <div style={{ textAlign: 'center', color: '#999', padding: '24px 0' }}>
-                    暂无绑定的指标
-                  </div>
-                ) : (
-                  boundIndicators.map(indicator => (
-                    <div key={indicator.id} style={{ marginBottom: '12px', padding: '12px', border: '1px solid #e0e0e0', borderRadius: '4px', backgroundColor: '#fafafa' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                        <div>
-                          <h4 style={{ margin: 0 }}>{indicator.name}</h4>
-                          <p style={{ margin: '4px 0', fontSize: '12px', color: '#666' }}>{indicator.description}</p>
+            <div style={{ display: 'flex', gap: '24px', padding: '20px' }}>
+              {/* 左侧可选指标 */}
+              <div style={{ flex: 1, backgroundColor: 'var(--bg-primary)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-lg)', overflow: 'hidden' }}>
+                <div style={{ padding: '16px 20px', backgroundColor: 'var(--primary-light)', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h3 style={{ color: 'var(--primary-color)', margin: 0, fontSize: '18px' }}>可用指标</h3>
+                  <span style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>{semanticIndicators.length} 个指标</span>
+                </div>
+                <div style={{ padding: '20px', maxHeight: 'calc(100vh - 260px)', overflowY: 'auto' }}>
+                  {semanticIndicators.length === 0 ? (
+                    <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', padding: '40px 0' }}>
+                      <p>暂无可用指标</p>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
+                      {semanticIndicators.map(indicator => (
+                        <div key={indicator.id} className="card" style={{ padding: '16px', margin: 0, border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-sm)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                            <h4 style={{ margin: 0, fontSize: '16px', color: 'var(--text-primary)' }}>{indicator.name}</h4>
+                            <span className={`status-badge ${indicator.status}`}>
+                              {indicator.status === 'published' ? '已发布' : '草稿'}
+                            </span>
+                          </div>
+                          <div style={{ marginBottom: '8px', fontSize: '14px' }}>
+                            <strong>表达式:</strong> <code>{indicator.expression}</code>
+                          </div>
+                          <div style={{ marginBottom: '8px', fontSize: '14px' }}>
+                            <strong>返回类型:</strong> {indicator.returnType}
+                          </div>
+                          <div style={{ marginBottom: '12px', fontSize: '14px', color: 'var(--text-secondary)' }}>
+                            {indicator.description}
+                          </div>
+                          <button 
+                            onClick={() => handleBindIndicator(indicator)}
+                            disabled={boundIndicators.find(b => b.id === indicator.id)}
+                            className={boundIndicators.find(b => b.id === indicator.id) ? 'disabled' : 'edit'}
+                            style={{ 
+                              padding: '6px 14px', 
+                              fontSize: '13px',
+                              fontWeight: '500',
+                              borderRadius: 'var(--radius-sm)',
+                              transition: 'all var(--transition-fast)',
+                              border: 'none',
+                              cursor: 'pointer',
+                              background: boundIndicators.find(b => b.id === indicator.id) ? 'var(--bg-tertiary)' : 'var(--success-color)',
+                              color: boundIndicators.find(b => b.id === indicator.id) ? 'var(--text-secondary)' : 'white',
+                              boxShadow: boundIndicators.find(b => b.id === indicator.id) ? 'none' : '0 2px 4px rgba(16, 185, 129, 0.2)',
+                              width: 'auto',
+                              alignSelf: 'flex-start'
+                            }}
+                          >
+                            {boundIndicators.find(b => b.id === indicator.id) ? '已绑定' : '绑定'}
+                          </button>
                         </div>
-                        <span className={`status-badge ${indicator.status}`} style={{ fontSize: '12px', padding: '2px 8px' }}>
-                          {indicator.status === 'published' ? '已发布' : '草稿'}
-                        </span>
-                      </div>
-                      <div style={{ marginBottom: '8px' }}>
-                        <strong>表达式:</strong> <code>{indicator.expression}</code>
-                      </div>
-                      <div style={{ marginBottom: '8px' }}>
-                        <strong>返回类型:</strong> {indicator.returnType}
-                      </div>
-                      <button 
-                        onClick={() => handleUnbindIndicator(indicator.id)}
-                        style={{ fontSize: '12px', padding: '4px 12px', backgroundColor: '#ff4d4f', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                      >
-                        解绑
-                      </button>
+                      ))}
                     </div>
-                  ))
-                )}
+                  )}
+                </div>
+              </div>
+
+              {/* 右侧已绑定指标 */}
+              <div style={{ flex: 1, backgroundColor: 'var(--bg-primary)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-lg)', overflow: 'hidden' }}>
+                <div style={{ padding: '16px 20px', backgroundColor: 'var(--success-light)', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h3 style={{ color: 'var(--success-color)', margin: 0, fontSize: '18px' }}>已绑定指标</h3>
+                  <span style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>{boundIndicators.length} 个指标</span>
+                </div>
+                <div style={{ padding: '20px', maxHeight: 'calc(100vh - 260px)', overflowY: 'auto' }}>
+                  {boundIndicators.length === 0 ? (
+                    <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', padding: '40px 0' }}>
+                      <p>暂无绑定的指标</p>
+                      <p style={{ fontSize: '14px', marginTop: '8px' }}>从左侧选择指标进行绑定</p>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
+                      {boundIndicators.map(indicator => (
+                        <div key={indicator.id} className="card" style={{ padding: '16px', margin: 0, borderLeft: '4px solid var(--success-color)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-sm)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                            <h4 style={{ margin: 0, fontSize: '16px', color: 'var(--text-primary)' }}>{indicator.name}</h4>
+                            <span className={`status-badge ${indicator.status}`}>
+                              {indicator.status === 'published' ? '已发布' : '草稿'}
+                            </span>
+                          </div>
+                          <div style={{ marginBottom: '8px', fontSize: '14px' }}>
+                            <strong>表达式:</strong> <code>{indicator.expression}</code>
+                          </div>
+                          <div style={{ marginBottom: '8px', fontSize: '14px' }}>
+                            <strong>返回类型:</strong> {indicator.returnType}
+                          </div>
+                          <div style={{ marginBottom: '12px', fontSize: '14px', color: 'var(--text-secondary)' }}>
+                            {indicator.description}
+                          </div>
+                          <button 
+                            onClick={() => handleUnbindIndicator(indicator.id)}
+                            className="delete"
+                            style={{ 
+                              padding: '6px 14px', 
+                              fontSize: '13px',
+                              fontWeight: '500',
+                              borderRadius: 'var(--radius-sm)',
+                              transition: 'all var(--transition-fast)',
+                              border: 'none',
+                              cursor: 'pointer',
+                              background: 'var(--danger-color)',
+                              color: 'white',
+                              boxShadow: '0 2px 4px rgba(239, 68, 68, 0.2)',
+                              width: 'auto',
+                              alignSelf: 'flex-start'
+                            }}
+                          >
+                            解绑
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          </>
         )}
       </div>
 

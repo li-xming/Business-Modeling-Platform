@@ -181,13 +181,279 @@ body {
   transform: translateY(0);
 }
 
-/* 画布容器 */
+/* 画布容器 - 现代浅色风格 */
 .canvas-container {
   width: 100%;
   height: calc(100vh - 60px);
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+}
+
+/* 网格背景效果 */
+.canvas-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px);
+  background-size: 40px 40px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* 节点样式 - 现代简约风格 */
+.sci-fi-node {
+  cursor: pointer;
+  /* 移除所有可能导致抖动的transform效果 */
+  transition: filter 0.3s ease;
+}
+
+/* 节点圆圈样式 */
+.sci-fi-node circle {
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  /* 只保留颜色和阴影的过渡，不包括位置或大小变化 */
+  transition: filter 0.3s ease;
+  filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.1));
+}
+
+.sci-fi-node:hover circle {
+  filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.3));
+  /* 确保不改变节点大小 */
+  r: var(--original-radius, 30);
+}
+
+/* 节点文本样式 */
+.sci-fi-node text {
+  font-weight: 500;
+  fill: white;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+  font-size: 12px;
+  /* 移除文本的transform效果 */
+  transition: font-weight 0.3s ease;
+}
+
+.sci-fi-node:hover text {
+  font-weight: 600;
+  /* 移除可能导致抖动的transform: scale */
+}
+
+/* 业务域节点样式 */
+.domain-node circle {
+  fill: #3b82f6;
+  stroke: #2563eb;
+  r: 35;
+}
+
+/* 模型节点样式 */
+.model-node circle {
+  fill: #10b981;
+  stroke: #059669;
+  r: 28;
+}
+
+/* 属性节点样式 */
+.property-node circle {
+  fill: #f59e0b;
+  stroke: #d97706;
+  r: 20;
+}
+
+/* 节点文本样式 */
+.sci-fi-node text {
+  font-weight: 500;
+  fill: white;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+  font-size: 12px;
+  transition: all 0.3s ease;
+}
+
+.sci-fi-node:hover text {
+  font-weight: 600;
+  transform: scale(1.05);
+}
+
+/* 连线样式 - 现代简约风格 */
+.sci-fi-link {
+  stroke: #94a3b8;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-opacity: 0.7;
+  transition: all 0.3s ease;
+}
+
+.sci-fi-link:hover {
+  stroke: #3b82f6;
+  stroke-width: 3;
+  stroke-opacity: 0.9;
+  filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.3));
+}
+
+/* 渐变定义 */
+.gradient-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+/* 悬停抽屉样式增强 */
+.hover-drawer {
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(12px);
+  border-left: 1px solid rgba(59, 130, 246, 0.3);
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.5);
+}
+
+.hover-drawer h3 {
+  color: #3b82f6;
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  text-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+}
+
+.hover-drawer p {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* 进入该域按钮 - 科幻样式 */
+.enter-domain-btn {
+  width: 100%;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 20px;
+}
+
+.enter-domain-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+}
+
+.enter-domain-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+/* 画布点击区域 */
+.canvas-click-area {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  cursor: default;
+}
+
+/* 模态框科幻样式 */
+.modal {
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(8px);
+}
+
+.modal-content {
+  background: rgba(30, 41, 59, 0.95);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+.modal h2 {
+  color: #3b82f6;
+  text-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+}
+
+/* 表单元素科幻样式 */
+.form-group label {
+  color: #94a3b8;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: #f1f5f9;
+  transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  background: rgba(15, 23, 42, 0.9);
+  border-color: #3b82f6;
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+}
+
+/* 按钮科幻样式增强 */
+.header-toolbar button {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.header-toolbar button:hover {
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+  transform: translateY(-3px);
+}
+
+/* 卡片科幻样式 */
+.card {
+  background: rgba(30, 41, 59, 0.9);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  backdrop-filter: blur(8px);
+}
+
+.card h3 {
+  color: #3b82f6;
+  text-shadow: 0 0 6px rgba(59, 130, 246, 0.3);
+}
+
+.card p {
+  color: #cbd5e1;
+}
+
+/* 面包屑科幻样式 */
+.breadcrumb {
+  background: rgba(30, 41, 59, 0.9);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.breadcrumb span {
+  color: #94a3b8;
+}
+
+.breadcrumb span:hover {
+  color: #3b82f6;
+  text-shadow: 0 0 6px rgba(59, 130, 246, 0.4);
+}
+
+.breadcrumb span:last-child {
+  color: #3b82f6;
+  font-weight: 600;
+  text-shadow: 0 0 6px rgba(59, 130, 246, 0.4);
 }
 
 /* 卡片列表样式 - 现代卡片设计 */
