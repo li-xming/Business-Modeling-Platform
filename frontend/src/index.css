@@ -181,6 +181,41 @@ body {
   transform: translateY(0);
 }
 
+/* 血缘分析按钮组样式 */
+.header-toolbar > div {
+  display: flex;
+  gap: 8px;
+}
+
+.header-toolbar > div button {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  transition: all var(--transition-fast);
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  background: none;
+  box-shadow: none;
+  transform: none;
+}
+
+.header-toolbar > div button:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--primary-color);
+  transform: none;
+  box-shadow: none;
+}
+
+.header-toolbar > div button.active {
+  background: var(--primary-gradient);
+  color: white;
+  border-color: transparent;
+  box-shadow: var(--shadow-sm);
+  transform: none;
+}
+
 /* 画布容器 - 现代浅色风格 */
 .canvas-container {
   width: 100%;
