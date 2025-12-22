@@ -691,5 +691,18 @@ def update_property(id):
             return jsonify(prop)
     return jsonify({"error": "Property not found"}), 404
 
+# 数据记录相关接口
+@app.route('/api/data', methods=['GET'])
+def get_data_records():
+    """获取模型数据记录"""
+    model_id = request.args.get('modelId')
+    # 模拟数据，实际项目中应该根据modelId从数据库获取数据
+    mock_data_records = [
+        {"id": 1, "licensePlate": "京A12345", "vehicleType": "小型客车", "entryTime": "2025-12-19 08:00:00", "exitTime": "2025-12-19 08:30:00", "tollFee": 50.0},
+        {"id": 2, "licensePlate": "沪B67890", "vehicleType": "大型货车", "entryTime": "2025-12-19 08:15:00", "exitTime": "2025-12-19 09:00:00", "tollFee": 120.0},
+        {"id": 3, "licensePlate": "粤C54321", "vehicleType": "小型客车", "entryTime": "2025-12-19 08:30:00", "exitTime": "2025-12-19 09:15:00", "tollFee": 80.0}
+    ]
+    return jsonify(mock_data_records)
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

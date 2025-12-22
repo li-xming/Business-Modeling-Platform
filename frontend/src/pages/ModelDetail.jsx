@@ -235,13 +235,17 @@ const ModelDetail = () => {
       })
       .catch(error => console.error('Failed to fetch indicators:', error))
     
-    // 模拟获取数据记录
-    const mockDataRecords = [
-      { id: 1, licensePlate: '京A12345', vehicleType: '小型客车', entryTime: '2025-12-19 08:00:00', exitTime: '2025-12-19 08:30:00', tollFee: 50.0 },
-      { id: 2, licensePlate: '沪B67890', vehicleType: '大型货车', entryTime: '2025-12-19 08:15:00', exitTime: '2025-12-19 09:00:00', tollFee: 120.0 },
-      { id: 3, licensePlate: '粤C54321', vehicleType: '小型客车', entryTime: '2025-12-19 08:30:00', exitTime: '2025-12-19 09:15:00', tollFee: 80.0 }
-    ]
-    setDataRecords(mockDataRecords)
+    // 从后端API获取数据记录
+    fetch(`/api/data?modelId=${modelId}`)
+      .then(response => response.json())
+      .then(data => {
+        setDataRecords(data)
+      })
+      .catch(error => {
+        console.error('Failed to fetch data records:', error)
+        // 获取失败时使用空数组
+        setDataRecords([])
+      })
   }, [modelId])
 
   // 处理新建属性
