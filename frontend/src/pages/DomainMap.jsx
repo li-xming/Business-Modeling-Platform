@@ -61,21 +61,32 @@ const DomainMap = () => {
     let nodes = []
     let links = []
 
+    // 搜索过滤函数
+    const matchesSearch = (name) => {
+      return name.toLowerCase().includes(searchTerm.toLowerCase())
+    }
+
     // 处理业务域节点，添加domain_前缀
     allData.domains.forEach(domain => {
-      nodes.push({
-        ...domain,
-        originalId: domain.id,
-        id: `domain_${domain.id}`,
-        type: 'domain'
-      })
+      if (matchesSearch(domain.name)) {
+        nodes.push({
+          ...domain,
+          originalId: domain.id,
+          id: `domain_${domain.id}`,
+          type: 'domain'
+        })
+      }
     })
 
+    // 获取所有保留的域ID
+    const retainedDomainIds = new Set(nodes.map(node => {
+      if (node.type === 'domain') return node.originalId
+    }).filter(Boolean))
+
     // 处理域之间的边，确保只添加存在的节点之间的边
-    const domainIds = new Set(allData.domains.map(domain => domain.id))
     allData.edges.forEach(edge => {
       // 只添加两个节点都存在的边
-      if (domainIds.has(edge.source) && domainIds.has(edge.target)) {
+      if (retainedDomainIds.has(edge.source) && retainedDomainIds.has(edge.target)) {
         links.push({
           source: `domain_${edge.source}`,
           target: `domain_${edge.target}`
@@ -86,26 +97,37 @@ const DomainMap = () => {
     if (isExpanded) {
       // 展开到模型级别，为模型节点添加model_前缀
       allData.models.forEach(model => {
-        nodes.push({
-          ...model,
-          originalId: model.id,
-          id: `model_${model.id}`,
-          type: 'model'
-        })
-        
-        // 添加域到模型的边
-        links.push({
-          source: `domain_${model.domainId}`,
-          target: `model_${model.id}`
-        })
+        // 显示匹配搜索的模型或属于匹配域的模型
+        if (matchesSearch(model.name) || retainedDomainIds.has(model.domainId)) {
+          nodes.push({
+            ...model,
+            originalId: model.id,
+            id: `model_${model.id}`,
+            type: 'model'
+          })
+          
+          // 添加域到模型的边
+          links.push({
+            source: `domain_${model.domainId}`,
+            target: `model_${model.id}`
+          })
+        }
       })
       
+      // 获取所有保留的模型ID
+      const retainedModelIds = new Set(nodes.map(node => {
+        if (node.type === 'model') return node.originalId
+      }).filter(Boolean))
+
       // 处理模型之间的边
-      allData.modelsEdges?.forEach(edge => {
-        links.push({
-          source: `model_${edge.source}`,
-          target: `model_${edge.target}`
-        })
+      allData.edges.forEach(edge => {
+        // 只添加两个模型节点都存在的边
+        if (retainedModelIds.has(edge.source) && retainedModelIds.has(edge.target)) {
+          links.push({
+            source: `model_${edge.source}`,
+            target: `model_${edge.target}`
+          })
+        }
       })
     }
     
@@ -309,7 +331,7 @@ const DomainMap = () => {
 
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
-  }, [allData, isExpanded])
+  }, [allData, isExpanded, searchTerm])
 
   // 处理新建域
   const handleCreateDomain = () => {

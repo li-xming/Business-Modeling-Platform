@@ -43,6 +43,9 @@ const DomainWorkbench = () => {
     enabled: true
   })
   
+  // 显示关系相关状态
+  const [showRelations, setShowRelations] = useState(false)
+  
   // 语义/指标相关状态
   const [semanticIndicators, setSemanticIndicators] = useState([])
   const [isIndicatorModalOpen, setIsIndicatorModalOpen] = useState(false)
@@ -152,25 +155,45 @@ const DomainWorkbench = () => {
 
     // 处理模型节点，添加model_前缀
     allData.models.forEach(model => {
-      nodes.push({
-        ...model,
-        originalId: model.id,
-        id: `model_${model.id}`,
-        type: 'model'
-      })
+      // 根据搜索词过滤模型
+      if (model.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+        nodes.push({
+          ...model,
+          originalId: model.id,
+          id: `model_${model.id}`,
+          type: 'model'
+        })
+      }
     })
 
-    // 处理模型之间的边
+    // 处理模型之间的边，只保留存在的节点之间的边
+    const modelIds = new Set(nodes.map(n => n.originalId))
+    
+    // 创建模型ID到模型名称的映射
+    const modelIdToName = {};
+    allData.models.forEach(model => {
+      modelIdToName[model.id] = model.name;
+    });
+    
     allData.edges.forEach(edge => {
-      links.push({
-        source: `model_${edge.source}`,
-        target: `model_${edge.target}`
-      })
+      if (modelIds.has(edge.source) && modelIds.has(edge.target)) {
+        // 查找对应的关系名称
+        const relation = relations.find(r => 
+          r.sourceModel === modelIdToName[edge.source] && 
+          r.targetModel === modelIdToName[edge.target]
+        );
+        
+        links.push({
+          source: `model_${edge.source}`,
+          target: `model_${edge.target}`,
+          relationName: relation ? relation.name : '关联'
+        })
+      }
     })
 
     if (isPropertyExpanded) {
       // 展开到属性级别，为属性节点添加property_前缀
-      const properties = allData.properties.filter(p => allData.models.some(m => m.id === p.modelId))
+      const properties = allData.properties.filter(p => modelIds.has(p.modelId))
       properties.forEach(property => {
         nodes.push({
           ...property,
@@ -261,12 +284,45 @@ const DomainWorkbench = () => {
       .attr('stop-color', d => d.color)
       .attr('stop-opacity', d => d.opacity)
 
+    // 为边添加箭头标记
+    svg.append('defs').selectAll('marker')
+      .data(['arrow'])
+      .enter().append('marker')
+      .attr('id', d => d)
+      .attr('viewBox', '0 -5 10 10')
+      .attr('refX', 25)
+      .attr('refY', 0)
+      .attr('markerWidth', 6)
+      .attr('markerHeight', 6)
+      .attr('orient', 'auto')
+      .append('path')
+      .attr('d', 'M0,-5L10,0L0,5')
+      .attr('fill', '#94a3b8')
+
+    // 创建边组
+    const linkGroup = svg.append('g')
+      .attr('class', 'link-group')
+
     // 创建边
-    const link = svg.append('g')
+    const link = linkGroup.append('g')
       .selectAll('line')
       .data(links)
       .enter().append('line')
       .attr('class', 'sci-fi-link')
+      .attr('marker-end', showRelations ? 'url(#arrow)' : null)
+
+    // 创建关系标签
+    const linkLabels = linkGroup.append('g')
+      .selectAll('text')
+      .data(links)
+      .enter().append('text')
+      .attr('class', 'link-label')
+      .style('display', showRelations ? 'block' : 'none')
+      .style('font-size', '10px')
+      .style('fill', '#94a3b8')
+      .style('text-anchor', 'middle')
+      .style('pointer-events', 'none')
+      .text(d => d.relationName)
 
     // 创建节点组
     const nodeGroup = svg.append('g')
@@ -351,6 +407,11 @@ const DomainWorkbench = () => {
         .attr('x2', d => d.target.x)
         .attr('y2', d => d.target.y)
 
+      // 更新关系标签位置
+      linkLabels
+        .attr('x', d => (d.source.x + d.target.x) / 2)
+        .attr('y', d => (d.source.y + d.target.y) / 2 - 5)
+
       nodeGroup
         .attr('transform', d => `translate(${d.x}, ${d.y})`)
     })
@@ -384,7 +445,7 @@ const DomainWorkbench = () => {
 
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
-  }, [allData, isPropertyExpanded, activeTab])
+  }, [allData, isPropertyExpanded, activeTab, searchTerm, showRelations])
 
   // 处理新建模型
   const handleCreateModel = () => {
@@ -905,6 +966,9 @@ const DomainWorkbench = () => {
               />
               <button onClick={() => setIsPropertyExpanded(!isPropertyExpanded)}>
                 {isPropertyExpanded ? '收起属性' : '展开到属性级别'}
+              </button>
+              <button onClick={() => setShowRelations(!showRelations)}>
+                {showRelations ? '隐藏关系' : '展示关系'}
               </button>
               <button onClick={() => navigate('/')}>返回域地图</button>
             </div>
