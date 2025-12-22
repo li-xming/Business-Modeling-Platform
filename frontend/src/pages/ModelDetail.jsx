@@ -1,14 +1,22 @@
 import React, { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 
 const ModelDetail = () => {
   const { modelId } = useParams()
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('properties')
   const [model, setModel] = useState(null)
   const [properties, setProperties] = useState([])
   const [relations, setRelations] = useState([])
   const [isPropertyModalOpen, setIsPropertyModalOpen] = useState(false)
+  const [editingProperty, setEditingProperty] = useState(null)
   const [newProperty, setNewProperty] = useState({ name: '', type: 'string', required: false, description: '' })
+  
+  // 操作反馈状态
+  const [notification, setNotification] = useState({ show: false, message: '', type: 'success' })
+  
+  // 确认对话框状态
+  const [confirmDialog, setConfirmDialog] = useState({ show: false, title: '', message: '', onConfirm: null })
   
   // 关系相关状态
   const [isRelationModalOpen, setIsRelationModalOpen] = useState(false)
@@ -34,6 +42,22 @@ const ModelDetail = () => {
   const [showRelationNameSuggestions, setShowRelationNameSuggestions] = useState(false)
   const [currentDomain, setCurrentDomain] = useState(null)
   const [modelName, setModelName] = useState('')
+  
+  // 显示通知
+  const showNotification = (message, type = 'success') => {
+    setNotification({ show: true, message, type })
+    setTimeout(() => setNotification({ show: false, message: '', type: 'success' }), 3000)
+  }
+  
+  // 显示确认对话框
+  const showConfirmDialog = (title, message, onConfirm) => {
+    setConfirmDialog({ show: true, title, message, onConfirm })
+  }
+  
+  // 关闭确认对话框
+  const closeConfirmDialog = () => {
+    setConfirmDialog({ show: false, title: '', message: '', onConfirm: null })
+  }
   
   // 数据源相关状态
   const [datasources, setDatasources] = useState([])
@@ -163,13 +187,29 @@ const ModelDetail = () => {
       })
       .catch(error => console.error('Failed to fetch relation types:', error))
     
-    // 模拟获取数据源数据
-    const mockDatasources = [
-      { id: 1, name: 'MySQL数据库', type: 'mysql', url: 'jdbc:mysql://localhost:3306/expressway', tableName: 't_vehicle', status: 'active', description: '车辆信息表' },
-      { id: 2, name: 'Oracle数据库', type: 'oracle', url: 'jdbc:oracle:thin:@localhost:1521:ORCL', tableName: 't_pass_record', status: 'active', description: '通行记录表' },
-      { id: 3, name: 'Kafka消息队列', type: 'kafka', url: 'localhost:9092', tableName: 'pass_events', status: 'inactive', description: '通行事件流' }
-    ]
-    setDatasources(mockDatasources)
+    // 获取数据源数据
+    fetch(`/api/datasource?modelId=${modelId}`)
+      .then(response => response.json())
+      .then(datasourceData => {
+        setDatasources(datasourceData)
+      })
+      .catch(error => console.error('Failed to fetch datasources:', error))
+    
+    // 获取模型绑定的指标
+    fetch(`/api/model/${modelId}/indicator`)
+      .then(response => response.json())
+      .then(indicatorData => {
+        setBoundIndicators(indicatorData)
+      })
+      .catch(error => console.error('Failed to fetch bound indicators:', error))
+    
+    // 获取所有可用指标
+    fetch('/api/indicator')
+      .then(response => response.json())
+      .then(indicatorData => {
+        setSemanticIndicators(indicatorData)
+      })
+      .catch(error => console.error('Failed to fetch indicators:', error))
     
     // 模拟获取数据记录
     const mockDataRecords = [
@@ -178,20 +218,6 @@ const ModelDetail = () => {
       { id: 3, licensePlate: '粤C54321', vehicleType: '小型客车', entryTime: '2025-12-19 08:30:00', exitTime: '2025-12-19 09:15:00', tollFee: 80.0 }
     ]
     setDataRecords(mockDataRecords)
-    
-    // 模拟获取语义/指标数据
-    const mockSemanticIndicators = [
-      { id: 1, name: '平均通行费用', expression: 'SUM(账单金额)/COUNT(通行记录)', returnType: 'number', description: '计算平均通行费用', status: 'published' },
-      { id: 2, name: '路段车流量', expression: 'COUNT(通行记录 WHERE 路段ID=?)', returnType: 'number', description: '计算路段车流量', status: 'draft' },
-      { id: 3, name: '车型占比', expression: 'COUNT(车辆信息 WHERE 车型=?)/COUNT(车辆信息)', returnType: 'number', description: '计算车型占比', status: 'published' }
-    ]
-    setSemanticIndicators(mockSemanticIndicators)
-    
-    // 模拟获取已绑定的指标
-    const mockBoundIndicators = [
-      { id: 1, name: '平均通行费用', expression: 'SUM(账单金额)/COUNT(通行记录)', returnType: 'number', description: '计算平均通行费用', status: 'published' }
-    ]
-    setBoundIndicators(mockBoundIndicators)
   }, [modelId])
 
   // 处理新建属性
@@ -210,27 +236,84 @@ const ModelDetail = () => {
       .then(property => {
         setProperties([...properties, property])
         setIsPropertyModalOpen(false)
+        setEditingProperty(null)
         setNewProperty({ name: '', type: 'string', required: false, description: '' })
+        showNotification('属性创建成功')
       })
-      .catch(error => console.error('Failed to create property:', error))
+      .catch(error => {
+        console.error('Failed to create property:', error)
+        showNotification('属性创建失败', 'error')
+      })
+  }
+  
+  // 处理编辑属性
+  const handleEditProperty = (property) => {
+    setEditingProperty(property)
+    setNewProperty({
+      name: property.name,
+      type: property.type,
+      required: property.required,
+      description: property.description
+    })
+    setIsPropertyModalOpen(true)
+  }
+  
+  // 处理更新属性
+  const handleUpdateProperty = () => {
+    fetch(`/api/property/${editingProperty.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newProperty)
+    })
+      .then(response => response.json())
+      .then(updatedProperty => {
+        setProperties(properties.map(p => p.id === updatedProperty.id ? updatedProperty : p))
+        setIsPropertyModalOpen(false)
+        setEditingProperty(null)
+        setNewProperty({ name: '', type: 'string', required: false, description: '' })
+        showNotification('属性更新成功')
+      })
+      .catch(error => {
+        console.error('Failed to update property:', error)
+        showNotification('属性更新失败', 'error')
+      })
+  }
+  
+  // 保存属性
+  const handleSaveProperty = () => {
+    if (editingProperty) {
+      handleUpdateProperty()
+    } else {
+      handleCreateProperty()
+    }
   }
 
   // 处理删除属性
   const handleDeleteProperty = (id) => {
-    fetch(`/api/property/${id}`, { method: 'DELETE' })
-      .then(() => {
-        setProperties(properties.filter(property => property.id !== id))
-      })
-      .catch(error => console.error('Failed to delete property:', error))
+    showConfirmDialog(
+      '删除确认',
+      '确定要删除该属性吗？删除后无法恢复。',
+      () => {
+        fetch(`/api/property/${id}`, { method: 'DELETE' })
+          .then(() => {
+            setProperties(properties.filter(property => property.id !== id))
+            showNotification('属性删除成功')
+            closeConfirmDialog()
+          })
+          .catch(error => {
+            console.error('Failed to delete property:', error)
+            showNotification('属性删除失败', 'error')
+            closeConfirmDialog()
+          })
+      }
+    )
   }
   
   // 关系处理函数
   const handleCreateRelation = () => {
     fetch('/api/relation', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         ...newRelation,
         sourceModelId: parseInt(modelId)
@@ -241,22 +324,28 @@ const ModelDetail = () => {
         setRelations([...relations, relation])
         setIsRelationModalOpen(false)
         setNewRelation({ name: '', sourceModel: '', targetModel: '', type: 'one-to-many', description: '' })
+        setTargetModelSearchTerm('')
+        setRelationNameSearchTerm('')
+        showNotification('关系创建成功')
       })
-      .catch(error => console.error('Failed to create relation:', error))
+      .catch(error => {
+        console.error('Failed to create relation:', error)
+        showNotification('关系创建失败', 'error')
+      })
   }
   
   const handleEditRelation = (relation) => {
     setEditingRelation(relation)
     setNewRelation(relation)
+    setTargetModelSearchTerm(relation.targetModel || '')
+    setRelationNameSearchTerm(relation.name || '')
     setIsRelationModalOpen(true)
   }
   
   const handleUpdateRelation = () => {
     fetch(`/api/relation/${editingRelation.id}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newRelation)
     })
       .then(response => response.json())
@@ -267,16 +356,34 @@ const ModelDetail = () => {
         setIsRelationModalOpen(false)
         setEditingRelation(null)
         setNewRelation({ name: '', sourceModel: '', targetModel: '', type: 'one-to-many', description: '' })
+        setTargetModelSearchTerm('')
+        setRelationNameSearchTerm('')
+        showNotification('关系更新成功')
       })
-      .catch(error => console.error('Failed to update relation:', error))
+      .catch(error => {
+        console.error('Failed to update relation:', error)
+        showNotification('关系更新失败', 'error')
+      })
   }
   
   const handleDeleteRelation = (id) => {
-    fetch(`/api/relation/${id}`, { method: 'DELETE' })
-      .then(() => {
-        setRelations(relations.filter(relation => relation.id !== id))
-      })
-      .catch(error => console.error('Failed to delete relation:', error))
+    showConfirmDialog(
+      '删除确认',
+      '确定要删除该关系吗？删除后无法恢复。',
+      () => {
+        fetch(`/api/relation/${id}`, { method: 'DELETE' })
+          .then(() => {
+            setRelations(relations.filter(relation => relation.id !== id))
+            showNotification('关系删除成功')
+            closeConfirmDialog()
+          })
+          .catch(error => {
+            console.error('Failed to delete relation:', error)
+            showNotification('关系删除失败', 'error')
+            closeConfirmDialog()
+          })
+      }
+    )
   }
   
   const handleSaveRelation = () => {
@@ -354,21 +461,29 @@ const ModelDetail = () => {
   
   // 数据源处理函数
   const handleCreateDatasource = () => {
-    // 实际项目中应该调用API
-    const datasource = {
-      id: datasources.length + 1,
-      ...newDatasource
-    }
-    setDatasources([...datasources, datasource])
-    setIsDatasourceModalOpen(false)
-    setNewDatasource({
-      name: '',
-      type: 'mysql',
-      url: '',
-      tableName: '',
-      status: 'inactive',
-      description: ''
+    fetch('/api/datasource', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...newDatasource, modelId: parseInt(modelId) })
     })
+      .then(response => response.json())
+      .then(datasource => {
+        setDatasources([...datasources, datasource])
+        setIsDatasourceModalOpen(false)
+        setNewDatasource({
+          name: '',
+          type: 'mysql',
+          url: '',
+          tableName: '',
+          status: 'inactive',
+          description: ''
+        })
+        showNotification('数据源创建成功')
+      })
+      .catch(error => {
+        console.error('Failed to create datasource:', error)
+        showNotification('数据源创建失败', 'error')
+      })
   }
   
   const handleEditDatasource = (datasource) => {
@@ -378,32 +493,67 @@ const ModelDetail = () => {
   }
   
   const handleUpdateDatasource = () => {
-    // 实际项目中应该调用API
-    setDatasources(datasources.map(datasource => 
-      datasource.id === editingDatasource.id ? newDatasource : datasource
-    ))
-    setIsDatasourceModalOpen(false)
-    setEditingDatasource(null)
-    setNewDatasource({
-      name: '',
-      type: 'mysql',
-      url: '',
-      tableName: '',
-      status: 'inactive',
-      description: ''
+    fetch(`/api/datasource/${editingDatasource.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newDatasource)
     })
+      .then(response => response.json())
+      .then(updatedDatasource => {
+        setDatasources(datasources.map(datasource => 
+          datasource.id === editingDatasource.id ? updatedDatasource : datasource
+        ))
+        setIsDatasourceModalOpen(false)
+        setEditingDatasource(null)
+        setNewDatasource({
+          name: '',
+          type: 'mysql',
+          url: '',
+          tableName: '',
+          status: 'inactive',
+          description: ''
+        })
+        showNotification('数据源更新成功')
+      })
+      .catch(error => {
+        console.error('Failed to update datasource:', error)
+        showNotification('数据源更新失败', 'error')
+      })
   }
   
   const handleDeleteDatasource = (id) => {
-    // 实际项目中应该调用API
-    setDatasources(datasources.filter(datasource => datasource.id !== id))
+    showConfirmDialog(
+      '删除确认',
+      '确定要删除该数据源吗？删除后无法恢复。',
+      () => {
+        fetch(`/api/datasource/${id}`, { method: 'DELETE' })
+          .then(() => {
+            setDatasources(datasources.filter(datasource => datasource.id !== id))
+            showNotification('数据源删除成功')
+            closeConfirmDialog()
+          })
+          .catch(error => {
+            console.error('Failed to delete datasource:', error)
+            showNotification('数据源删除失败', 'error')
+            closeConfirmDialog()
+          })
+      }
+    )
   }
   
   const handleToggleDatasource = (id) => {
-    // 实际项目中应该调用API
-    setDatasources(datasources.map(datasource => 
-      datasource.id === id ? { ...datasource, status: datasource.status === 'active' ? 'inactive' : 'active' } : datasource
-    ))
+    fetch(`/api/datasource/${id}/toggle`, { method: 'PUT' })
+      .then(response => response.json())
+      .then(updatedDatasource => {
+        setDatasources(datasources.map(datasource => 
+          datasource.id === id ? updatedDatasource : datasource
+        ))
+        showNotification(updatedDatasource.status === 'active' ? '数据源已启用' : '数据源已禁用')
+      })
+      .catch(error => {
+        console.error('Failed to toggle datasource:', error)
+        showNotification('操作失败', 'error')
+      })
   }
   
   const handleSaveDatasource = () => {
@@ -458,32 +608,54 @@ const ModelDetail = () => {
   
   // 语义/指标处理函数
   const handleBindIndicator = (indicator) => {
-    // 实际项目中应该调用API
-    if (!boundIndicators.find(b => b.id === indicator.id)) {
-      setBoundIndicators([...boundIndicators, indicator])
-    }
+    fetch(`/api/model/${modelId}/indicator/${indicator.id}`, { method: 'POST' })
+      .then(response => response.json())
+      .then(() => {
+        if (!boundIndicators.find(b => b.id === indicator.id)) {
+          setBoundIndicators([...boundIndicators, indicator])
+        }
+        showNotification('指标绑定成功')
+      })
+      .catch(error => {
+        console.error('Failed to bind indicator:', error)
+        showNotification('指标绑定失败', 'error')
+      })
   }
   
   const handleUnbindIndicator = (id) => {
-    // 实际项目中应该调用API
-    setBoundIndicators(boundIndicators.filter(indicator => indicator.id !== id))
+    fetch(`/api/model/${modelId}/indicator/${id}`, { method: 'DELETE' })
+      .then(() => {
+        setBoundIndicators(boundIndicators.filter(indicator => indicator.id !== id))
+        showNotification('指标已解绑')
+      })
+      .catch(error => {
+        console.error('Failed to unbind indicator:', error)
+        showNotification('指标解绑失败', 'error')
+      })
   }
   
   const handleCreateIndicator = () => {
-    // 实际项目中应该调用API
-    const indicator = {
-      id: semanticIndicators.length + 1,
-      ...newIndicator,
-      status: 'draft'
-    }
-    setSemanticIndicators([...semanticIndicators, indicator])
-    setIsIndicatorModalOpen(false)
-    setNewIndicator({
-      name: '',
-      expression: '',
-      returnType: 'number',
-      description: ''
+    fetch('/api/indicator', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...newIndicator, status: 'draft' })
     })
+      .then(response => response.json())
+      .then(indicator => {
+        setSemanticIndicators([...semanticIndicators, indicator])
+        setIsIndicatorModalOpen(false)
+        setNewIndicator({
+          name: '',
+          expression: '',
+          returnType: 'number',
+          description: ''
+        })
+        showNotification('指标创建成功')
+      })
+      .catch(error => {
+        console.error('Failed to create indicator:', error)
+        showNotification('指标创建失败', 'error')
+      })
   }
   
   const handleSaveIndicator = () => {
@@ -492,11 +664,43 @@ const ModelDetail = () => {
 
   return (
     <div className="model-detail">
+      {/* 通知提示 */}
+      {notification.show && (
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          right: '20px',
+          padding: '12px 24px',
+          borderRadius: '8px',
+          backgroundColor: notification.type === 'success' ? '#10b981' : '#ef4444',
+          color: 'white',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          zIndex: 1000,
+          animation: 'slideIn 0.3s ease'
+        }}>
+          {notification.message}
+        </div>
+      )}
+      
+      {/* 确认对话框 */}
+      {confirmDialog.show && (
+        <div className="modal">
+          <div className="modal-content" style={{ maxWidth: '400px' }}>
+            <h2>{confirmDialog.title}</h2>
+            <p style={{ margin: '20px 0', color: '#666' }}>{confirmDialog.message}</p>
+            <div className="form-actions">
+              <button className="cancel" onClick={closeConfirmDialog}>取消</button>
+              <button className="delete" onClick={confirmDialog.onConfirm}>确认删除</button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* 面包屑 */}
       <div style={{ padding: '12px 16px', backgroundColor: '#f0f2f5', borderBottom: '1px solid #e0e0e0' }}>
-        <span style={{ cursor: 'pointer', color: '#1890ff', marginRight: '8px' }} onClick={() => window.location.href = '/'}>业务域地图</span>
+        <span style={{ cursor: 'pointer', color: '#1890ff', marginRight: '8px' }} onClick={() => navigate('/')}>业务域地图</span>
         <span style={{ marginRight: '8px' }}>&gt;</span>
-        <span style={{ cursor: 'pointer', color: '#1890ff', marginRight: '8px' }} onClick={() => window.location.href = `/domain/${model?.domainId}`}>{model?.domainName}</span>
+        <span style={{ cursor: 'pointer', color: '#1890ff', marginRight: '8px' }} onClick={() => navigate(`/domain/${model?.domainId}`)}>{model?.domainName}</span>
         <span style={{ marginRight: '8px' }}>&gt;</span>
         <span>{model?.name}</span>
       </div>
@@ -560,7 +764,7 @@ const ModelDetail = () => {
                   <p>必填: {property.required ? '是' : '否'}</p>
                   <p>描述: {property.description}</p>
                   <div className="card-actions">
-                    <button className="edit" onClick={() => console.log('编辑属性', property.id)}>编辑</button>
+                    <button className="edit" onClick={() => handleEditProperty(property)}>编辑</button>
                     <button className="delete" onClick={() => handleDeleteProperty(property.id)}>删除</button>
                   </div>
                 </div>
@@ -814,11 +1018,11 @@ const ModelDetail = () => {
         )}
       </div>
 
-      {/* 新建属性模态框 */}
+      {/* 新建/编辑属性模态框 */}
       {isPropertyModalOpen && (
         <div className="modal">
           <div className="modal-content">
-            <h2>新建属性</h2>
+            <h2>{editingProperty ? '编辑属性' : '新建属性'}</h2>
             <div className="form-group">
               <label>名称</label>
               <input
@@ -858,8 +1062,12 @@ const ModelDetail = () => {
               ></textarea>
             </div>
             <div className="form-actions">
-              <button className="cancel" onClick={() => setIsPropertyModalOpen(false)}>取消</button>
-              <button className="submit" onClick={handleCreateProperty}>确定</button>
+              <button className="cancel" onClick={() => {
+                setIsPropertyModalOpen(false)
+                setEditingProperty(null)
+                setNewProperty({ name: '', type: 'string', required: false, description: '' })
+              }}>取消</button>
+              <button className="submit" onClick={handleSaveProperty}>{editingProperty ? '更新' : '确定'}</button>
             </div>
           </div>
         </div>

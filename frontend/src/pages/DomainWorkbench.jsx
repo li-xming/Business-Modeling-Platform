@@ -1,20 +1,28 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import * as d3 from 'd3'
 
 const DomainWorkbench = () => {
   const { domainId } = useParams()
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('model-map')
   const [models, setModels] = useState([])
   const [modelEdges, setModelEdges] = useState([])
   const [hoveredModel, setHoveredModel] = useState(null)
   const [isDrawerVisible, setIsDrawerVisible] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingModel, setEditingModel] = useState(null)
   const [newModel, setNewModel] = useState({ name: '', description: '', parentId: '', tags: '' })
   const [searchTerm, setSearchTerm] = useState('')
   const [currentDomain, setCurrentDomain] = useState(null)
   const [isPropertyExpanded, setIsPropertyExpanded] = useState(false)
   const [allData, setAllData] = useState({ models: [], properties: [], edges: [] })
+  
+  // 操作反馈状态
+  const [notification, setNotification] = useState({ show: false, message: '', type: 'success' })
+  
+  // 确认对话框状态
+  const [confirmDialog, setConfirmDialog] = useState({ show: false, title: '', message: '', onConfirm: null })
   
   // 共享属性相关状态
   const [sharedAttributes, setSharedAttributes] = useState([])
@@ -52,6 +60,22 @@ const DomainWorkbench = () => {
   const svgRef = useRef(null)
   const containerRef = useRef(null)
   const timerRef = useRef(null)
+  
+  // 显示通知
+  const showNotification = (message, type = 'success') => {
+    setNotification({ show: true, message, type })
+    setTimeout(() => setNotification({ show: false, message: '', type: 'success' }), 3000)
+  }
+  
+  // 显示确认对话框
+  const showConfirmDialog = (title, message, onConfirm) => {
+    setConfirmDialog({ show: true, title, message, onConfirm })
+  }
+  
+  // 关闭确认对话框
+  const closeConfirmDialog = () => {
+    setConfirmDialog({ show: false, title: '', message: '', onConfirm: null })
+  }
 
   // 从API获取数据
   useEffect(() => {
@@ -85,48 +109,29 @@ const DomainWorkbench = () => {
       })
       .catch(error => console.error('Failed to fetch domain:', error))
     
-    // 模拟获取共享属性数据
-    // 实际项目中应该调用API获取
-    const mockSharedAttrs = [
-      { id: 1, name: '创建时间', type: 'datetime', description: '记录创建时间', referenceCount: 5 },
-      { id: 2, name: '更新时间', type: 'datetime', description: '记录更新时间', referenceCount: 5 },
-      { id: 3, name: '状态', type: 'string', length: '20', description: '记录状态', referenceCount: 3 },
-      { id: 4, name: '备注', type: 'text', description: '备注信息', referenceCount: 2 },
-      { id: 5, name: '排序号', type: 'number', precision: '0', description: '排序序号', referenceCount: 4 }
-    ]
-    setSharedAttributes(mockSharedAttrs)
+    // 从后端API获取共享属性数据
+    fetch(`/api/shared-attribute?domainId=${domainId}`)
+      .then(response => response.json())
+      .then(attrData => {
+        setSharedAttributes(attrData)
+      })
+      .catch(error => console.error('Failed to fetch shared attributes:', error))
     
-    // 模拟获取关系数据
-    // 实际项目中应该调用API获取
-    const mockRelations = [
-      { id: 1, name: '持有', sourceModel: '车辆', targetModel: '通行介质', type: 'one-to-many', description: '车辆持有多个通行介质', enabled: true },
-      { id: 2, name: '关联', sourceModel: '车辆', targetModel: '交易流水', type: 'one-to-many', description: '车辆关联多个交易流水', enabled: true },
-      { id: 3, name: '管理', sourceModel: '路段业主', targetModel: '收费公路', type: 'one-to-many', description: '路段业主管理多个收费公路', enabled: true },
-      { id: 4, name: '包含', sourceModel: '收费公路', targetModel: '收费站', type: 'one-to-many', description: '收费公路包含多个收费站', enabled: true },
-      { id: 5, name: '包含', sourceModel: '收费公路', targetModel: 'ETC门架', type: 'one-to-many', description: '收费公路包含多个ETC门架', enabled: true },
-      { id: 6, name: '包含', sourceModel: '收费公路', targetModel: '收费单元', type: 'one-to-many', description: '收费公路包含多个收费单元', enabled: true },
-      { id: 7, name: '代收', sourceModel: 'ETC门架', targetModel: '收费单元', type: 'one-to-many', description: 'ETC门架代收多个收费单元', enabled: true },
-      { id: 8, name: '包含', sourceModel: '收费站', targetModel: '车道', type: 'one-to-many', description: '收费站包含多个车道', enabled: true },
-      { id: 9, name: '继承', sourceModel: 'ETC门架', targetModel: '标识点', type: 'one-to-one', description: 'ETC门架继承标识点', enabled: true },
-      { id: 10, name: '继承', sourceModel: '车道', targetModel: '标识点', type: 'one-to-one', description: '车道继承标识点', enabled: true },
-      { id: 11, name: '生成', sourceModel: '标识点', targetModel: '交易流水', type: 'one-to-many', description: '标识点生成多个交易流水', enabled: true },
-      { id: 12, name: '汇聚为', sourceModel: '交易流水', targetModel: '车辆通行路径', type: 'many-to-one', description: '多个交易流水汇聚为一个车辆通行路径', enabled: true },
-      { id: 13, name: '拟合为', sourceModel: '车辆通行路径', targetModel: '通行拟合路径', type: 'one-to-one', description: '车辆通行路径拟合为一个通行拟合路径', enabled: true },
-      { id: 14, name: '拆分为', sourceModel: '通行拟合路径', targetModel: '拆分明细', type: 'one-to-many', description: '通行拟合路径拆分为多个拆分明细', enabled: true },
-      { id: 15, name: '关联', sourceModel: '收费单元', targetModel: '拆分明细', type: 'one-to-one', description: '收费单元关联一个拆分明细', enabled: true }
-    ]
-    setRelations(mockRelations)
+    // 从后端API获取关系数据
+    fetch(`/api/relation?domainId=${domainId}`)
+      .then(response => response.json())
+      .then(relationData => {
+        setRelations(relationData)
+      })
+      .catch(error => console.error('Failed to fetch relations:', error))
     
-    // 模拟获取语义/指标数据
-    // 实际项目中应该调用API获取
-    const mockIndicators = [
-      { id: 1, name: '平均通行费用', expression: 'SUM(账单金额)/COUNT(通行记录)', returnType: 'number', description: '计算平均通行费用', status: 'published', unit: '元' },
-      { id: 2, name: '路段车流量', expression: 'COUNT(通行记录 WHERE 路段ID=?)', returnType: 'number', description: '计算路段车流量', status: 'draft', unit: '辆' },
-      { id: 3, name: '车型占比', expression: 'COUNT(车辆信息 WHERE 车型=?)/COUNT(车辆信息)', returnType: 'number', description: '计算车型占比', status: 'published', unit: '%' },
-      { id: 4, name: '收费站日均收入', expression: 'SUM(账单金额 WHERE 收费站ID=?)/COUNT(DISTINCT 日期)', returnType: 'number', description: '计算收费站日均收入', status: 'draft', unit: '元' },
-      { id: 5, name: '通行时间', expression: '结束时间 - 开始时间', returnType: 'time', description: '计算通行时间', status: 'published', unit: '分钟' }
-    ]
-    setSemanticIndicators(mockIndicators)
+    // 从后端API获取语义/指标数据
+    fetch(`/api/indicator?domainId=${domainId}`)
+      .then(response => response.json())
+      .then(indicatorData => {
+        setSemanticIndicators(indicatorData)
+      })
+      .catch(error => console.error('Failed to fetch indicators:', error))
   }, [domainId])
 
   // 使用D3渲染模型地图
@@ -397,33 +402,101 @@ const DomainWorkbench = () => {
       .then(model => {
         setModels([...models, model])
         setIsModalOpen(false)
+        setEditingModel(null)
         setNewModel({ name: '', description: '', parentId: '', tags: '' })
+        showNotification('模型创建成功')
       })
-      .catch(error => console.error('Failed to create model:', error))
+      .catch(error => {
+        console.error('Failed to create model:', error)
+        showNotification('模型创建失败', 'error')
+      })
+  }
+  
+  // 处理编辑模型
+  const handleEditModel = (model) => {
+    setEditingModel(model)
+    setNewModel({
+      name: model.name,
+      description: model.description,
+      parentId: model.parentId || '',
+      tags: model.tags || ''
+    })
+    setIsModalOpen(true)
+  }
+  
+  // 处理更新模型
+  const handleUpdateModel = () => {
+    fetch(`/api/model/${editingModel.id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(newModel)
+    })
+      .then(response => response.json())
+      .then(updatedModel => {
+        setModels(models.map(m => m.id === updatedModel.id ? updatedModel : m))
+        setIsModalOpen(false)
+        setEditingModel(null)
+        setNewModel({ name: '', description: '', parentId: '', tags: '' })
+        showNotification('模型更新成功')
+      })
+      .catch(error => {
+        console.error('Failed to update model:', error)
+        showNotification('模型更新失败', 'error')
+      })
+  }
+  
+  // 保存模型（创建或更新）
+  const handleSaveModel = () => {
+    if (editingModel) {
+      handleUpdateModel()
+    } else {
+      handleCreateModel()
+    }
   }
 
   // 处理删除模型
   const handleDeleteModel = (id) => {
-    fetch(`/api/model/${id}`, {
-      method: 'DELETE'
-    })
-      .then(() => {
-        setModels(models.filter(model => model.id !== id))
-      })
-      .catch(error => console.error('Failed to delete model:', error))
+    showConfirmDialog(
+      '删除确认',
+      '确定要删除该模型吗？删除后无法恢复，且会同时删除关联的属性和关系。',
+      () => {
+        fetch(`/api/model/${id}`, {
+          method: 'DELETE'
+        })
+          .then(() => {
+            setModels(models.filter(model => model.id !== id))
+            showNotification('模型删除成功')
+            closeConfirmDialog()
+          })
+          .catch(error => {
+            console.error('Failed to delete model:', error)
+            showNotification('模型删除失败', 'error')
+            closeConfirmDialog()
+          })
+      }
+    )
   }
   
   // 共享属性处理函数
   const handleCreateAttr = () => {
-    // 实际项目中应该调用API
-    const attr = {
-      id: sharedAttributes.length + 1,
-      ...newAttr,
-      referenceCount: 0
-    }
-    setSharedAttributes([...sharedAttributes, attr])
-    setIsAttrModalOpen(false)
-    setNewAttr({ name: '', type: 'string', length: '', precision: '', description: '', valueRange: '' })
+    fetch('/api/shared-attribute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...newAttr, domainId: parseInt(domainId) })
+    })
+      .then(response => response.json())
+      .then(attr => {
+        setSharedAttributes([...sharedAttributes, attr])
+        setIsAttrModalOpen(false)
+        setNewAttr({ name: '', type: 'string', length: '', precision: '', description: '', valueRange: '' })
+        showNotification('共享属性创建成功')
+      })
+      .catch(error => {
+        console.error('Failed to create shared attribute:', error)
+        showNotification('共享属性创建失败', 'error')
+      })
   }
   
   const handleEditAttr = (attr) => {
@@ -433,18 +506,45 @@ const DomainWorkbench = () => {
   }
   
   const handleUpdateAttr = () => {
-    // 实际项目中应该调用API
-    setSharedAttributes(sharedAttributes.map(attr => 
-      attr.id === editingAttr.id ? newAttr : attr
-    ))
-    setIsAttrModalOpen(false)
-    setEditingAttr(null)
-    setNewAttr({ name: '', type: 'string', length: '', precision: '', description: '', valueRange: '' })
+    fetch(`/api/shared-attribute/${editingAttr.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newAttr)
+    })
+      .then(response => response.json())
+      .then(updatedAttr => {
+        setSharedAttributes(sharedAttributes.map(attr => 
+          attr.id === editingAttr.id ? updatedAttr : attr
+        ))
+        setIsAttrModalOpen(false)
+        setEditingAttr(null)
+        setNewAttr({ name: '', type: 'string', length: '', precision: '', description: '', valueRange: '' })
+        showNotification('共享属性更新成功')
+      })
+      .catch(error => {
+        console.error('Failed to update shared attribute:', error)
+        showNotification('共享属性更新失败', 'error')
+      })
   }
   
   const handleDeleteAttr = (id) => {
-    // 实际项目中应该调用API，这里模拟删除
-    setSharedAttributes(sharedAttributes.filter(attr => attr.id !== id))
+    showConfirmDialog(
+      '删除确认',
+      '确定要删除该共享属性吗？删除后无法恢复。',
+      () => {
+        fetch(`/api/shared-attribute/${id}`, { method: 'DELETE' })
+          .then(() => {
+            setSharedAttributes(sharedAttributes.filter(attr => attr.id !== id))
+            showNotification('共享属性删除成功')
+            closeConfirmDialog()
+          })
+          .catch(error => {
+            console.error('Failed to delete shared attribute:', error)
+            showNotification('共享属性删除失败', 'error')
+            closeConfirmDialog()
+          })
+      }
+    )
   }
   
   const handleSaveAttr = () => {
@@ -457,21 +557,29 @@ const DomainWorkbench = () => {
   
   // 关系管理处理函数
   const handleCreateRelation = () => {
-    // 实际项目中应该调用API
-    const relation = {
-      id: relations.length + 1,
-      ...newRelation
-    }
-    setRelations([...relations, relation])
-    setIsRelationModalOpen(false)
-    setNewRelation({
-      name: '',
-      sourceModel: '',
-      targetModel: '',
-      type: 'one-to-many',
-      description: '',
-      enabled: true
+    fetch('/api/relation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newRelation)
     })
+      .then(response => response.json())
+      .then(relation => {
+        setRelations([...relations, relation])
+        setIsRelationModalOpen(false)
+        setNewRelation({
+          name: '',
+          sourceModel: '',
+          targetModel: '',
+          type: 'one-to-many',
+          description: '',
+          enabled: true
+        })
+        showNotification('关系创建成功')
+      })
+      .catch(error => {
+        console.error('Failed to create relation:', error)
+        showNotification('关系创建失败', 'error')
+      })
   }
   
   const handleEditRelation = (relation) => {
@@ -481,32 +589,67 @@ const DomainWorkbench = () => {
   }
   
   const handleUpdateRelation = () => {
-    // 实际项目中应该调用API
-    setRelations(relations.map(relation => 
-      relation.id === editingRelation.id ? newRelation : relation
-    ))
-    setIsRelationModalOpen(false)
-    setEditingRelation(null)
-    setNewRelation({
-      name: '',
-      sourceModel: '',
-      targetModel: '',
-      type: 'one-to-many',
-      description: '',
-      enabled: true
+    fetch(`/api/relation/${editingRelation.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newRelation)
     })
+      .then(response => response.json())
+      .then(updatedRelation => {
+        setRelations(relations.map(relation => 
+          relation.id === editingRelation.id ? updatedRelation : relation
+        ))
+        setIsRelationModalOpen(false)
+        setEditingRelation(null)
+        setNewRelation({
+          name: '',
+          sourceModel: '',
+          targetModel: '',
+          type: 'one-to-many',
+          description: '',
+          enabled: true
+        })
+        showNotification('关系更新成功')
+      })
+      .catch(error => {
+        console.error('Failed to update relation:', error)
+        showNotification('关系更新失败', 'error')
+      })
   }
   
   const handleDeleteRelation = (id) => {
-    // 实际项目中应该调用API，这里模拟删除
-    setRelations(relations.filter(relation => relation.id !== id))
+    showConfirmDialog(
+      '删除确认',
+      '确定要删除该关系吗？删除后无法恢复。',
+      () => {
+        fetch(`/api/relation/${id}`, { method: 'DELETE' })
+          .then(() => {
+            setRelations(relations.filter(relation => relation.id !== id))
+            showNotification('关系删除成功')
+            closeConfirmDialog()
+          })
+          .catch(error => {
+            console.error('Failed to delete relation:', error)
+            showNotification('关系删除失败', 'error')
+            closeConfirmDialog()
+          })
+      }
+    )
   }
   
   const handleToggleRelation = (id) => {
-    // 实际项目中应该调用API
-    setRelations(relations.map(relation => 
-      relation.id === id ? { ...relation, enabled: !relation.enabled } : relation
-    ))
+    fetch(`/api/relation/${id}/toggle`, { method: 'PUT' })
+      .then(response => response.json())
+      .then(updatedRelation => {
+        setRelations(relations.map(relation => 
+          relation.id === id ? updatedRelation : relation
+        ))
+        showNotification(updatedRelation.enabled ? '关系已启用' : '关系已禁用')
+      })
+      .catch(error => {
+        console.error('Failed to toggle relation:', error)
+        showNotification('操作失败', 'error')
+      })
   }
   
   const handleSaveRelation = () => {
@@ -519,21 +662,29 @@ const DomainWorkbench = () => {
   
   // 语义/指标处理函数
   const handleCreateIndicator = () => {
-    // 实际项目中应该调用API
-    const indicator = {
-      id: semanticIndicators.length + 1,
-      ...newIndicator
-    }
-    setSemanticIndicators([...semanticIndicators, indicator])
-    setIsIndicatorModalOpen(false)
-    setNewIndicator({
-      name: '',
-      expression: '',
-      returnType: 'number',
-      description: '',
-      status: 'draft',
-      unit: ''
+    fetch('/api/indicator', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...newIndicator, domainId: parseInt(domainId) })
     })
+      .then(response => response.json())
+      .then(indicator => {
+        setSemanticIndicators([...semanticIndicators, indicator])
+        setIsIndicatorModalOpen(false)
+        setNewIndicator({
+          name: '',
+          expression: '',
+          returnType: 'number',
+          description: '',
+          status: 'draft',
+          unit: ''
+        })
+        showNotification('指标创建成功')
+      })
+      .catch(error => {
+        console.error('Failed to create indicator:', error)
+        showNotification('指标创建失败', 'error')
+      })
   }
   
   const handleEditIndicator = (indicator) => {
@@ -543,39 +694,82 @@ const DomainWorkbench = () => {
   }
   
   const handleUpdateIndicator = () => {
-    // 实际项目中应该调用API
-    setSemanticIndicators(semanticIndicators.map(indicator => 
-      indicator.id === editingIndicator.id ? newIndicator : indicator
-    ))
-    setIsIndicatorModalOpen(false)
-    setEditingIndicator(null)
-    setNewIndicator({
-      name: '',
-      expression: '',
-      returnType: 'number',
-      description: '',
-      status: 'draft',
-      unit: ''
+    fetch(`/api/indicator/${editingIndicator.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newIndicator)
     })
+      .then(response => response.json())
+      .then(updatedIndicator => {
+        setSemanticIndicators(semanticIndicators.map(indicator => 
+          indicator.id === editingIndicator.id ? updatedIndicator : indicator
+        ))
+        setIsIndicatorModalOpen(false)
+        setEditingIndicator(null)
+        setNewIndicator({
+          name: '',
+          expression: '',
+          returnType: 'number',
+          description: '',
+          status: 'draft',
+          unit: ''
+        })
+        showNotification('指标更新成功')
+      })
+      .catch(error => {
+        console.error('Failed to update indicator:', error)
+        showNotification('指标更新失败', 'error')
+      })
   }
   
   const handleDeleteIndicator = (id) => {
-    // 实际项目中应该调用API，这里模拟删除
-    setSemanticIndicators(semanticIndicators.filter(indicator => indicator.id !== id))
+    showConfirmDialog(
+      '删除确认',
+      '确定要删除该指标吗？删除后无法恢复。',
+      () => {
+        fetch(`/api/indicator/${id}`, { method: 'DELETE' })
+          .then(() => {
+            setSemanticIndicators(semanticIndicators.filter(indicator => indicator.id !== id))
+            showNotification('指标删除成功')
+            closeConfirmDialog()
+          })
+          .catch(error => {
+            console.error('Failed to delete indicator:', error)
+            showNotification('指标删除失败', 'error')
+            closeConfirmDialog()
+          })
+      }
+    )
   }
   
   const handlePublishIndicator = (id) => {
-    // 实际项目中应该调用API
-    setSemanticIndicators(semanticIndicators.map(indicator => 
-      indicator.id === id ? { ...indicator, status: 'published' } : indicator
-    ))
+    fetch(`/api/indicator/${id}/publish`, { method: 'PUT' })
+      .then(response => response.json())
+      .then(updatedIndicator => {
+        setSemanticIndicators(semanticIndicators.map(indicator => 
+          indicator.id === id ? updatedIndicator : indicator
+        ))
+        showNotification('指标发布成功')
+      })
+      .catch(error => {
+        console.error('Failed to publish indicator:', error)
+        showNotification('指标发布失败', 'error')
+      })
   }
   
   const handleOfflineIndicator = (id) => {
-    // 实际项目中应该调用API
-    setSemanticIndicators(semanticIndicators.map(indicator => 
-      indicator.id === id ? { ...indicator, status: 'offline' } : indicator
-    ))
+    fetch(`/api/indicator/${id}/offline`, { method: 'PUT' })
+      .then(response => response.json())
+      .then(updatedIndicator => {
+        setSemanticIndicators(semanticIndicators.map(indicator => 
+          indicator.id === id ? updatedIndicator : indicator
+        ))
+        showNotification('指标已下线')
+      })
+      .catch(error => {
+        console.error('Failed to offline indicator:', error)
+        showNotification('指标下线失败', 'error')
+      })
   }
   
   const handleSaveIndicator = () => {
@@ -588,14 +782,28 @@ const DomainWorkbench = () => {
   
   const handleCopyIndicator = (indicator) => {
     // 复制并创建新指标
-    const newIndicatorCopy = {
-      id: semanticIndicators.length + 1,
+    const copyData = {
       ...indicator,
       name: `${indicator.name} - 副本`,
       status: 'draft',
-      expression: indicator.expression
+      domainId: parseInt(domainId)
     }
-    setSemanticIndicators([...semanticIndicators, newIndicatorCopy])
+    delete copyData.id
+    
+    fetch('/api/indicator', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(copyData)
+    })
+      .then(response => response.json())
+      .then(newIndicatorCopy => {
+        setSemanticIndicators([...semanticIndicators, newIndicatorCopy])
+        showNotification('指标复制成功')
+      })
+      .catch(error => {
+        console.error('Failed to copy indicator:', error)
+        showNotification('指标复制失败', 'error')
+      })
   }
 
   // 过滤模型
@@ -605,9 +813,41 @@ const DomainWorkbench = () => {
 
   return (
     <div className="domain-workbench">
+      {/* 通知提示 */}
+      {notification.show && (
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          right: '20px',
+          padding: '12px 24px',
+          borderRadius: '8px',
+          backgroundColor: notification.type === 'success' ? '#10b981' : '#ef4444',
+          color: 'white',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          zIndex: 1000,
+          animation: 'slideIn 0.3s ease'
+        }}>
+          {notification.message}
+        </div>
+      )}
+      
+      {/* 确认对话框 */}
+      {confirmDialog.show && (
+        <div className="modal">
+          <div className="modal-content" style={{ maxWidth: '400px' }}>
+            <h2>{confirmDialog.title}</h2>
+            <p style={{ margin: '20px 0', color: '#666' }}>{confirmDialog.message}</p>
+            <div className="form-actions">
+              <button className="cancel" onClick={closeConfirmDialog}>取消</button>
+              <button className="delete" onClick={confirmDialog.onConfirm}>确认删除</button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* 面包屑 */}
       <div style={{ padding: '12px 16px', backgroundColor: '#f0f2f5', borderBottom: '1px solid #e0e0e0' }}>
-        <span style={{ cursor: 'pointer', color: '#1890ff', marginRight: '8px' }} onClick={() => window.location.href = '/'}>业务域地图</span>
+        <span style={{ cursor: 'pointer', color: '#1890ff', marginRight: '8px' }} onClick={() => navigate('/')}>业务域地图</span>
         <span style={{ marginRight: '8px' }}>&gt;</span>
         <span>{currentDomain?.name || `域ID: ${domainId}`}</span>
       </div>
@@ -666,7 +906,7 @@ const DomainWorkbench = () => {
               <button onClick={() => setIsPropertyExpanded(!isPropertyExpanded)}>
                 {isPropertyExpanded ? '收起属性' : '展开到属性级别'}
               </button>
-              <button onClick={() => window.location.href = '/'}>返回域地图</button>
+              <button onClick={() => navigate('/')}>返回域地图</button>
             </div>
             <div ref={containerRef} className="canvas-container">
               <svg ref={svgRef} width="100%" height="100%"></svg>
@@ -693,7 +933,7 @@ const DomainWorkbench = () => {
                 <div 
                   key={model.id} 
                   className="card"
-                  onDoubleClick={() => window.location.href = `/model/${model.id}`}
+                  onDoubleClick={() => navigate(`/model/${model.id}`)}
                   style={{ cursor: 'pointer' }}
                 >
                   <h3>{model.name}</h3>
@@ -703,7 +943,7 @@ const DomainWorkbench = () => {
                   <div className="card-actions">
                     <button className="edit" onClick={(e) => {
                       e.stopPropagation();
-                      console.log('编辑模型', model.id);
+                      handleEditModel(model);
                     }}>编辑</button>
                     <button className="delete" onClick={(e) => {
                       e.stopPropagation();
@@ -711,7 +951,7 @@ const DomainWorkbench = () => {
                     }}>删除</button>
                     <button onClick={(e) => {
                       e.stopPropagation();
-                      window.location.href = `/model/${model.id}`;
+                      navigate(`/model/${model.id}`);
                     }}>详情</button>
                   </div>
                 </div>
@@ -879,11 +1119,11 @@ const DomainWorkbench = () => {
         )}
       </div>
 
-      {/* 新建模型模态框 */}
+      {/* 新建/编辑模型模态框 */}
       {isModalOpen && (
         <div className="modal">
           <div className="modal-content">
-            <h2>新建模型</h2>
+            <h2>{editingModel ? '编辑模型' : '新建模型'}</h2>
             <div className="form-group">
               <label>名称</label>
               <input
@@ -916,8 +1156,12 @@ const DomainWorkbench = () => {
               />
             </div>
             <div className="form-actions">
-              <button className="cancel" onClick={() => setIsModalOpen(false)}>取消</button>
-              <button className="submit" onClick={handleCreateModel}>确定</button>
+              <button className="cancel" onClick={() => {
+                setIsModalOpen(false)
+                setEditingModel(null)
+                setNewModel({ name: '', description: '', parentId: '', tags: '' })
+              }}>取消</button>
+              <button className="submit" onClick={handleSaveModel}>{editingModel ? '更新' : '确定'}</button>
             </div>
           </div>
         </div>
@@ -1015,17 +1259,9 @@ const DomainWorkbench = () => {
                 onChange={(e) => setNewRelation({ ...newRelation, sourceModel: e.target.value })}
               >
                 <option value="">选择源模型</option>
-                <option value="车辆">车辆</option>
-                <option value="路段业主">路段业主</option>
-                <option value="收费公路">收费公路</option>
-                <option value="收费站">收费站</option>
-                <option value="ETC门架">ETC门架</option>
-                <option value="收费单元">收费单元</option>
-                <option value="车道">车道</option>
-                <option value="标识点">标识点</option>
-                <option value="交易流水">交易流水</option>
-                <option value="车辆通行路径">车辆通行路径</option>
-                <option value="通行拟合路径">通行拟合路径</option>
+                {models.map(model => (
+                  <option key={model.id} value={model.name}>{model.name}</option>
+                ))}
               </select>
             </div>
             <div className="form-group">
@@ -1035,17 +1271,9 @@ const DomainWorkbench = () => {
                 onChange={(e) => setNewRelation({ ...newRelation, targetModel: e.target.value })}
               >
                 <option value="">选择目标模型</option>
-                <option value="通行介质">通行介质</option>
-                <option value="交易流水">交易流水</option>
-                <option value="收费公路">收费公路</option>
-                <option value="收费站">收费站</option>
-                <option value="ETC门架">ETC门架</option>
-                <option value="收费单元">收费单元</option>
-                <option value="车道">车道</option>
-                <option value="标识点">标识点</option>
-                <option value="车辆通行路径">车辆通行路径</option>
-                <option value="通行拟合路径">通行拟合路径</option>
-                <option value="拆分明细">拆分明细</option>
+                {models.map(model => (
+                  <option key={model.id} value={model.name}>{model.name}</option>
+                ))}
               </select>
             </div>
             <div className="form-group">

@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import * as d3 from 'd3'
 
 const DomainMap = () => {
+  const navigate = useNavigate()
   const [domains, setDomains] = useState([])
   const [edges, setEdges] = useState([])
   const [hoveredDomain, setHoveredDomain] = useState(null)
@@ -222,10 +224,10 @@ const DomainMap = () => {
       event.stopPropagation()
       if (d.type === 'model') {
         // 模型节点，跳转到模型详情
-        window.location.href = `/model/${d.originalId}`
+        navigate(`/model/${d.originalId}`)
       } else {
         // 域节点，跳转到域工作台
-        window.location.href = `/domain/${d.originalId}`
+        navigate(`/domain/${d.originalId}`)
       }
     })
     
@@ -395,7 +397,7 @@ const DomainMap = () => {
             <p>最近变更: {hoveredDomain.updatedAt}</p>
             <button
               className="enter-domain-btn"
-              onClick={() => window.location.href = `/domain/${hoveredDomain.originalId}`}
+              onClick={() => navigate(`/domain/${hoveredDomain.originalId}`)}
             >
               进入该域
             </button>

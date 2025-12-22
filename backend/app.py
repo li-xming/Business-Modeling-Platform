@@ -1,9 +1,34 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from datetime import datetime
 import os
 
 app = Flask(__name__)
 CORS(app)
+
+# 获取当前日期
+def get_current_date():
+    return datetime.now().strftime("%Y-%m-%d")
+
+# 获取下一个ID
+def get_next_id(data_list):
+    if not data_list:
+        return 1
+    return max(item["id"] for item in data_list) + 1
+
+# 根据ID获取模型名称
+def get_model_name_by_id(model_id):
+    for model in mock_data["models"]:
+        if model["id"] == model_id:
+            return model["name"]
+    return None
+
+# 根据名称获取模型ID
+def get_model_id_by_name(model_name):
+    for model in mock_data["models"]:
+        if model["name"] == model_name:
+            return model["id"]
+    return None
 
 # 模拟数据库 - 路网设施域独立演示数据
 mock_data = {
@@ -108,37 +133,54 @@ mock_data = {
         {"id": 31, "name": "纬度", "type": "number", "required": True, "description": "标识点纬度", "modelId": 7},
         {"id": 32, "name": "标识点类型", "type": "string", "required": True, "description": "标识点类型", "modelId": 7}
     ],
+    # 关系数据 - 使用sourceModelId和targetModelId实现规范化
     "relations": [
-        # 车辆 - 通行介质
-        {"id": 1, "name": "持有", "targetModel": "通行介质", "type": "one-to-many", "description": "车辆持有多个通行介质", "sourceModelId": 8},
-        # 车辆 - 交易流水
-        {"id": 2, "name": "关联", "targetModel": "交易流水", "type": "one-to-many", "description": "车辆关联多个交易流水", "sourceModelId": 8},
-        # 路段业主 - 收费公路
-        {"id": 3, "name": "管理", "targetModel": "收费公路", "type": "one-to-many", "description": "路段业主管理多个收费公路", "sourceModelId": 1},
-        # 收费公路 - 收费站
-        {"id": 4, "name": "包含", "targetModel": "收费站", "type": "one-to-many", "description": "收费公路包含多个收费站", "sourceModelId": 2},
-        # 收费公路 - ETC门架
-        {"id": 5, "name": "包含", "targetModel": "ETC门架", "type": "one-to-many", "description": "收费公路包含多个ETC门架", "sourceModelId": 2},
-        # 收费公路 - 收费单元
-        {"id": 6, "name": "包含", "targetModel": "收费单元", "type": "one-to-many", "description": "收费公路包含多个收费单元", "sourceModelId": 2},
-        # ETC门架 - 收费单元
-        {"id": 7, "name": "代收", "targetModel": "收费单元", "type": "one-to-many", "description": "ETC门架代收多个收费单元", "sourceModelId": 4},
-        # 收费站 - 车道
-        {"id": 8, "name": "包含", "targetModel": "车道", "type": "one-to-many", "description": "收费站包含多个车道", "sourceModelId": 3},
-        # ETC门架 - 标识点
-        {"id": 9, "name": "继承", "targetModel": "标识点", "type": "one-to-one", "description": "ETC门架对应一个标识点", "sourceModelId": 4},
-        # 车道 - 标识点
-        {"id": 10, "name": "继承", "targetModel": "标识点", "type": "one-to-one", "description": "车道对应一个标识点", "sourceModelId": 6},
-        # 标识点 - 交易流水
-        {"id": 11, "name": "生成", "targetModel": "交易流水", "type": "one-to-many", "description": "标识点生成多个交易流水", "sourceModelId": 7},
-        # 交易流水 - 车辆通行路径
-        {"id": 12, "name": "汇聚为", "targetModel": "车辆通行路径", "type": "many-to-one", "description": "多个交易流水汇聚为一个车辆通行路径", "sourceModelId": 10},
-        # 车辆通行路径 - 通行拟合路径
-        {"id": 13, "name": "拟合为", "targetModel": "通行拟合路径", "type": "one-to-one", "description": "车辆通行路径拟合为一个通行拟合路径", "sourceModelId": 11},
-        # 通行拟合路径 - 拆分明细
-        {"id": 14, "name": "拆分为", "targetModel": "拆分明细", "type": "one-to-many", "description": "通行拟合路径拆分为多个拆分明细", "sourceModelId": 12},
-        # 收费单元 - 拆分明细
-        {"id": 15, "name": "关联", "targetModel": "拆分明细", "type": "one-to-one", "description": "收费单元关联一个拆分明细", "sourceModelId": 5}
+        {"id": 1, "name": "持有", "sourceModelId": 8, "targetModelId": 9, "type": "one-to-many", "description": "车辆持有多个通行介质", "enabled": True},
+        {"id": 2, "name": "关联", "sourceModelId": 8, "targetModelId": 10, "type": "one-to-many", "description": "车辆关联多个交易流水", "enabled": True},
+        {"id": 3, "name": "管理", "sourceModelId": 1, "targetModelId": 2, "type": "one-to-many", "description": "路段业主管理多个收费公路", "enabled": True},
+        {"id": 4, "name": "包含", "sourceModelId": 2, "targetModelId": 3, "type": "one-to-many", "description": "收费公路包含多个收费站", "enabled": True},
+        {"id": 5, "name": "包含", "sourceModelId": 2, "targetModelId": 4, "type": "one-to-many", "description": "收费公路包含多个ETC门架", "enabled": True},
+        {"id": 6, "name": "包含", "sourceModelId": 2, "targetModelId": 5, "type": "one-to-many", "description": "收费公路包含多个收费单元", "enabled": True},
+        {"id": 7, "name": "代收", "sourceModelId": 4, "targetModelId": 5, "type": "one-to-many", "description": "ETC门架代收多个收费单元", "enabled": True},
+        {"id": 8, "name": "包含", "sourceModelId": 3, "targetModelId": 6, "type": "one-to-many", "description": "收费站包含多个车道", "enabled": True},
+        {"id": 9, "name": "继承", "sourceModelId": 4, "targetModelId": 7, "type": "one-to-one", "description": "ETC门架对应一个标识点", "enabled": True},
+        {"id": 10, "name": "继承", "sourceModelId": 6, "targetModelId": 7, "type": "one-to-one", "description": "车道对应一个标识点", "enabled": True},
+        {"id": 11, "name": "生成", "sourceModelId": 7, "targetModelId": 10, "type": "one-to-many", "description": "标识点生成多个交易流水", "enabled": True},
+        {"id": 12, "name": "汇聚为", "sourceModelId": 10, "targetModelId": 11, "type": "many-to-one", "description": "多个交易流水汇聚为一个车辆通行路径", "enabled": True},
+        {"id": 13, "name": "拟合为", "sourceModelId": 11, "targetModelId": 12, "type": "one-to-one", "description": "车辆通行路径拟合为一个通行拟合路径", "enabled": True},
+        {"id": 14, "name": "拆分为", "sourceModelId": 12, "targetModelId": 13, "type": "one-to-many", "description": "通行拟合路径拆分为多个拆分明细", "enabled": True},
+        {"id": 15, "name": "关联", "sourceModelId": 5, "targetModelId": 13, "type": "one-to-one", "description": "收费单元关联一个拆分明细", "enabled": True}
+    ],
+    
+    # 共享属性数据
+    "shared_attributes": [
+        {"id": 1, "name": "创建时间", "type": "datetime", "length": None, "precision": None, "description": "记录创建时间", "valueRange": None, "domainId": 3, "referenceCount": 5},
+        {"id": 2, "name": "更新时间", "type": "datetime", "length": None, "precision": None, "description": "记录更新时间", "valueRange": None, "domainId": 3, "referenceCount": 5},
+        {"id": 3, "name": "状态", "type": "string", "length": "20", "precision": None, "description": "记录状态", "valueRange": "有效,无效", "domainId": 3, "referenceCount": 3},
+        {"id": 4, "name": "备注", "type": "text", "length": None, "precision": None, "description": "备注信息", "valueRange": None, "domainId": 3, "referenceCount": 2},
+        {"id": 5, "name": "排序号", "type": "number", "length": None, "precision": "0", "description": "排序序号", "valueRange": None, "domainId": 3, "referenceCount": 4}
+    ],
+    
+    # 语义指标数据
+    "indicators": [
+        {"id": 1, "name": "平均通行费用", "expression": "SUM(账单金额)/COUNT(通行记录)", "returnType": "number", "unit": "元", "description": "计算平均通行费用", "status": "published", "domainId": 3, "createdAt": "2025-12-22", "updatedAt": "2025-12-22"},
+        {"id": 2, "name": "路段车流量", "expression": "COUNT(通行记录 WHERE 路段ID=?)", "returnType": "number", "unit": "辆", "description": "计算路段车流量", "status": "draft", "domainId": 3, "createdAt": "2025-12-22", "updatedAt": "2025-12-22"},
+        {"id": 3, "name": "车型占比", "expression": "COUNT(车辆信息 WHERE 车型=?)/COUNT(车辆信息)", "returnType": "number", "unit": "%", "description": "计算车型占比", "status": "published", "domainId": 3, "createdAt": "2025-12-22", "updatedAt": "2025-12-22"},
+        {"id": 4, "name": "收费站日均收入", "expression": "SUM(账单金额 WHERE 收费站ID=?)/COUNT(DISTINCT 日期)", "returnType": "number", "unit": "元", "description": "计算收费站日均收入", "status": "draft", "domainId": 3, "createdAt": "2025-12-22", "updatedAt": "2025-12-22"},
+        {"id": 5, "name": "通行时间", "expression": "结束时间 - 开始时间", "returnType": "time", "unit": "分钟", "description": "计算通行时间", "status": "published", "domainId": 3, "createdAt": "2025-12-22", "updatedAt": "2025-12-22"}
+    ],
+    
+    # 数据源数据
+    "datasources": [
+        {"id": 1, "name": "MySQL数据库", "type": "mysql", "url": "jdbc:mysql://localhost:3306/expressway", "tableName": "t_vehicle", "status": "active", "description": "车辆信息表", "modelId": 8, "createdAt": "2025-12-22", "updatedAt": "2025-12-22"},
+        {"id": 2, "name": "Oracle数据库", "type": "oracle", "url": "jdbc:oracle:thin:@localhost:1521:ORCL", "tableName": "t_pass_record", "status": "active", "description": "通行记录表", "modelId": 10, "createdAt": "2025-12-22", "updatedAt": "2025-12-22"},
+        {"id": 3, "name": "Kafka消息队列", "type": "kafka", "url": "localhost:9092", "tableName": "pass_events", "status": "inactive", "description": "通行事件流", "modelId": 10, "createdAt": "2025-12-22", "updatedAt": "2025-12-22"}
+    ],
+    
+    # 模型绑定的指标
+    "model_indicators": [
+        {"modelId": 10, "indicatorId": 1},
+        {"modelId": 3, "indicatorId": 4}
     ]
 }
 
@@ -269,9 +311,385 @@ def delete_property(id):
 def get_relations():
     """获取关系列表"""
     model_id = request.args.get('modelId')
+    domain_id = request.args.get('domainId')
+    
+    relations = mock_data["relations"]
+    
+    # 为关系添加模型名称信息
+    result = []
+    for r in relations:
+        relation_with_names = {
+            **r,
+            "sourceModel": get_model_name_by_id(r["sourceModelId"]),
+            "targetModel": get_model_name_by_id(r["targetModelId"])
+        }
+        result.append(relation_with_names)
+    
     if model_id:
-        return jsonify([r for r in mock_data["relations"] if r["sourceModelId"] == int(model_id)])
-    return jsonify(mock_data["relations"])
+        result = [r for r in result if r["sourceModelId"] == int(model_id)]
+    
+    if domain_id:
+        # 获取该域下的所有模型ID
+        domain_model_ids = [m["id"] for m in mock_data["models"] if m["domainId"] == int(domain_id)]
+        result = [r for r in result if r["sourceModelId"] in domain_model_ids]
+    
+    return jsonify(result)
+
+@app.route('/api/relation', methods=['POST'])
+def create_relation():
+    """新建关系"""
+    data = request.get_json()
+    
+    # 支持通过模型名称或ID创建关系
+    source_model_id = data.get("sourceModelId")
+    target_model_id = data.get("targetModelId")
+    
+    if not source_model_id and data.get("sourceModel"):
+        source_model_id = get_model_id_by_name(data["sourceModel"])
+    if not target_model_id and data.get("targetModel"):
+        target_model_id = get_model_id_by_name(data["targetModel"])
+    
+    if not source_model_id or not target_model_id:
+        return jsonify({"error": "Invalid source or target model"}), 400
+    
+    relation = {
+        "id": get_next_id(mock_data["relations"]),
+        "name": data["name"],
+        "sourceModelId": source_model_id,
+        "targetModelId": target_model_id,
+        "type": data.get("type", "one-to-many"),
+        "description": data.get("description", ""),
+        "enabled": data.get("enabled", True)
+    }
+    mock_data["relations"].append(relation)
+    
+    # 同步更新model_edges
+    mock_data["model_edges"].append({
+        "source": source_model_id,
+        "target": target_model_id
+    })
+    
+    # 返回时添加模型名称
+    relation["sourceModel"] = get_model_name_by_id(source_model_id)
+    relation["targetModel"] = get_model_name_by_id(target_model_id)
+    
+    return jsonify(relation), 201
+
+@app.route('/api/relation/<int:id>', methods=['PUT'])
+def update_relation(id):
+    """更新关系"""
+    data = request.get_json()
+    for relation in mock_data["relations"]:
+        if relation["id"] == id:
+            # 更新目标模型ID
+            if data.get("targetModelId"):
+                relation["targetModelId"] = data["targetModelId"]
+            elif data.get("targetModel"):
+                target_id = get_model_id_by_name(data["targetModel"])
+                if target_id:
+                    relation["targetModelId"] = target_id
+            
+            relation["name"] = data.get("name", relation["name"])
+            relation["type"] = data.get("type", relation["type"])
+            relation["description"] = data.get("description", relation["description"])
+            relation["enabled"] = data.get("enabled", relation["enabled"])
+            
+            # 返回时添加模型名称
+            result = {
+                **relation,
+                "sourceModel": get_model_name_by_id(relation["sourceModelId"]),
+                "targetModel": get_model_name_by_id(relation["targetModelId"])
+            }
+            return jsonify(result)
+    return jsonify({"error": "Relation not found"}), 404
+
+@app.route('/api/relation/<int:id>', methods=['DELETE'])
+def delete_relation(id):
+    """删除关系"""
+    # 找到要删除的关系
+    relation_to_delete = None
+    for r in mock_data["relations"]:
+        if r["id"] == id:
+            relation_to_delete = r
+            break
+    
+    if relation_to_delete:
+        # 同步删除model_edges中的对应边
+        mock_data["model_edges"] = [
+            e for e in mock_data["model_edges"] 
+            if not (e["source"] == relation_to_delete["sourceModelId"] and 
+                   e["target"] == relation_to_delete["targetModelId"])
+        ]
+    
+    mock_data["relations"] = [r for r in mock_data["relations"] if r["id"] != id]
+    return jsonify({"message": "Relation deleted", "success": True})
+
+@app.route('/api/relation/<int:id>/toggle', methods=['PUT'])
+def toggle_relation(id):
+    """启用/禁用关系"""
+    for relation in mock_data["relations"]:
+        if relation["id"] == id:
+            relation["enabled"] = not relation["enabled"]
+            result = {
+                **relation,
+                "sourceModel": get_model_name_by_id(relation["sourceModelId"]),
+                "targetModel": get_model_name_by_id(relation["targetModelId"])
+            }
+            return jsonify(result)
+    return jsonify({"error": "Relation not found"}), 404
+
+# 共享属性相关接口
+@app.route('/api/shared-attribute', methods=['GET'])
+def get_shared_attributes():
+    """获取共享属性列表"""
+    domain_id = request.args.get('domainId')
+    if domain_id:
+        return jsonify([a for a in mock_data["shared_attributes"] if a["domainId"] == int(domain_id)])
+    return jsonify(mock_data["shared_attributes"])
+
+@app.route('/api/shared-attribute', methods=['POST'])
+def create_shared_attribute():
+    """新建共享属性"""
+    data = request.get_json()
+    attr = {
+        "id": get_next_id(mock_data["shared_attributes"]),
+        "name": data["name"],
+        "type": data.get("type", "string"),
+        "length": data.get("length"),
+        "precision": data.get("precision"),
+        "description": data.get("description", ""),
+        "valueRange": data.get("valueRange"),
+        "domainId": int(data.get("domainId", 3)),
+        "referenceCount": 0
+    }
+    mock_data["shared_attributes"].append(attr)
+    return jsonify(attr), 201
+
+@app.route('/api/shared-attribute/<int:id>', methods=['PUT'])
+def update_shared_attribute(id):
+    """更新共享属性"""
+    data = request.get_json()
+    for attr in mock_data["shared_attributes"]:
+        if attr["id"] == id:
+            attr.update({
+                "name": data.get("name", attr["name"]),
+                "type": data.get("type", attr["type"]),
+                "length": data.get("length", attr["length"]),
+                "precision": data.get("precision", attr["precision"]),
+                "description": data.get("description", attr["description"]),
+                "valueRange": data.get("valueRange", attr["valueRange"])
+            })
+            return jsonify(attr)
+    return jsonify({"error": "Shared attribute not found"}), 404
+
+@app.route('/api/shared-attribute/<int:id>', methods=['DELETE'])
+def delete_shared_attribute(id):
+    """删除共享属性"""
+    mock_data["shared_attributes"] = [a for a in mock_data["shared_attributes"] if a["id"] != id]
+    return jsonify({"message": "Shared attribute deleted", "success": True})
+
+# 语义指标相关接口
+@app.route('/api/indicator', methods=['GET'])
+def get_indicators():
+    """获取指标列表"""
+    domain_id = request.args.get('domainId')
+    model_id = request.args.get('modelId')
+    status = request.args.get('status')
+    
+    result = mock_data["indicators"]
+    
+    if domain_id:
+        result = [i for i in result if i["domainId"] == int(domain_id)]
+    
+    if status:
+        result = [i for i in result if i["status"] == status]
+    
+    if model_id:
+        # 获取该模型绑定的指标ID
+        bound_indicator_ids = [
+            mi["indicatorId"] for mi in mock_data["model_indicators"] 
+            if mi["modelId"] == int(model_id)
+        ]
+        result = [i for i in result if i["id"] in bound_indicator_ids]
+    
+    return jsonify(result)
+
+@app.route('/api/indicator', methods=['POST'])
+def create_indicator():
+    """新建指标"""
+    data = request.get_json()
+    indicator = {
+        "id": get_next_id(mock_data["indicators"]),
+        "name": data["name"],
+        "expression": data.get("expression", ""),
+        "returnType": data.get("returnType", "number"),
+        "unit": data.get("unit", ""),
+        "description": data.get("description", ""),
+        "status": data.get("status", "draft"),
+        "domainId": int(data.get("domainId", 3)),
+        "createdAt": get_current_date(),
+        "updatedAt": get_current_date()
+    }
+    mock_data["indicators"].append(indicator)
+    return jsonify(indicator), 201
+
+@app.route('/api/indicator/<int:id>', methods=['PUT'])
+def update_indicator(id):
+    """更新指标"""
+    data = request.get_json()
+    for indicator in mock_data["indicators"]:
+        if indicator["id"] == id:
+            indicator.update({
+                "name": data.get("name", indicator["name"]),
+                "expression": data.get("expression", indicator["expression"]),
+                "returnType": data.get("returnType", indicator["returnType"]),
+                "unit": data.get("unit", indicator["unit"]),
+                "description": data.get("description", indicator["description"]),
+                "status": data.get("status", indicator["status"]),
+                "updatedAt": get_current_date()
+            })
+            return jsonify(indicator)
+    return jsonify({"error": "Indicator not found"}), 404
+
+@app.route('/api/indicator/<int:id>', methods=['DELETE'])
+def delete_indicator(id):
+    """删除指标"""
+    mock_data["indicators"] = [i for i in mock_data["indicators"] if i["id"] != id]
+    # 同时删除模型绑定关系
+    mock_data["model_indicators"] = [mi for mi in mock_data["model_indicators"] if mi["indicatorId"] != id]
+    return jsonify({"message": "Indicator deleted", "success": True})
+
+@app.route('/api/indicator/<int:id>/publish', methods=['PUT'])
+def publish_indicator(id):
+    """发布指标"""
+    for indicator in mock_data["indicators"]:
+        if indicator["id"] == id:
+            indicator["status"] = "published"
+            indicator["updatedAt"] = get_current_date()
+            return jsonify(indicator)
+    return jsonify({"error": "Indicator not found"}), 404
+
+@app.route('/api/indicator/<int:id>/offline', methods=['PUT'])
+def offline_indicator(id):
+    """下线指标"""
+    for indicator in mock_data["indicators"]:
+        if indicator["id"] == id:
+            indicator["status"] = "offline"
+            indicator["updatedAt"] = get_current_date()
+            return jsonify(indicator)
+    return jsonify({"error": "Indicator not found"}), 404
+
+# 模型-指标绑定接口
+@app.route('/api/model/<int:model_id>/indicator', methods=['GET'])
+def get_model_indicators(model_id):
+    """获取模型绑定的指标"""
+    bound_indicator_ids = [
+        mi["indicatorId"] for mi in mock_data["model_indicators"] 
+        if mi["modelId"] == model_id
+    ]
+    result = [i for i in mock_data["indicators"] if i["id"] in bound_indicator_ids]
+    return jsonify(result)
+
+@app.route('/api/model/<int:model_id>/indicator/<int:indicator_id>', methods=['POST'])
+def bind_indicator(model_id, indicator_id):
+    """绑定指标到模型"""
+    # 检查是否已绑定
+    for mi in mock_data["model_indicators"]:
+        if mi["modelId"] == model_id and mi["indicatorId"] == indicator_id:
+            return jsonify({"error": "Already bound"}), 400
+    
+    mock_data["model_indicators"].append({
+        "modelId": model_id,
+        "indicatorId": indicator_id
+    })
+    return jsonify({"message": "Indicator bound", "success": True}), 201
+
+@app.route('/api/model/<int:model_id>/indicator/<int:indicator_id>', methods=['DELETE'])
+def unbind_indicator(model_id, indicator_id):
+    """解绑指标"""
+    mock_data["model_indicators"] = [
+        mi for mi in mock_data["model_indicators"] 
+        if not (mi["modelId"] == model_id and mi["indicatorId"] == indicator_id)
+    ]
+    return jsonify({"message": "Indicator unbound", "success": True})
+
+# 数据源相关接口
+@app.route('/api/datasource', methods=['GET'])
+def get_datasources():
+    """获取数据源列表"""
+    model_id = request.args.get('modelId')
+    if model_id:
+        return jsonify([d for d in mock_data["datasources"] if d["modelId"] == int(model_id)])
+    return jsonify(mock_data["datasources"])
+
+@app.route('/api/datasource', methods=['POST'])
+def create_datasource():
+    """新建数据源"""
+    data = request.get_json()
+    datasource = {
+        "id": get_next_id(mock_data["datasources"]),
+        "name": data["name"],
+        "type": data.get("type", "mysql"),
+        "url": data.get("url", ""),
+        "tableName": data.get("tableName", ""),
+        "status": data.get("status", "inactive"),
+        "description": data.get("description", ""),
+        "modelId": int(data.get("modelId", 0)),
+        "createdAt": get_current_date(),
+        "updatedAt": get_current_date()
+    }
+    mock_data["datasources"].append(datasource)
+    return jsonify(datasource), 201
+
+@app.route('/api/datasource/<int:id>', methods=['PUT'])
+def update_datasource(id):
+    """更新数据源"""
+    data = request.get_json()
+    for datasource in mock_data["datasources"]:
+        if datasource["id"] == id:
+            datasource.update({
+                "name": data.get("name", datasource["name"]),
+                "type": data.get("type", datasource["type"]),
+                "url": data.get("url", datasource["url"]),
+                "tableName": data.get("tableName", datasource["tableName"]),
+                "status": data.get("status", datasource["status"]),
+                "description": data.get("description", datasource["description"]),
+                "updatedAt": get_current_date()
+            })
+            return jsonify(datasource)
+    return jsonify({"error": "Datasource not found"}), 404
+
+@app.route('/api/datasource/<int:id>', methods=['DELETE'])
+def delete_datasource(id):
+    """删除数据源"""
+    mock_data["datasources"] = [d for d in mock_data["datasources"] if d["id"] != id]
+    return jsonify({"message": "Datasource deleted", "success": True})
+
+@app.route('/api/datasource/<int:id>/toggle', methods=['PUT'])
+def toggle_datasource(id):
+    """启用/禁用数据源"""
+    for datasource in mock_data["datasources"]:
+        if datasource["id"] == id:
+            datasource["status"] = "inactive" if datasource["status"] == "active" else "active"
+            datasource["updatedAt"] = get_current_date()
+            return jsonify(datasource)
+    return jsonify({"error": "Datasource not found"}), 404
+
+# 属性更新接口
+@app.route('/api/property/<int:id>', methods=['PUT'])
+def update_property(id):
+    """更新属性"""
+    data = request.get_json()
+    for prop in mock_data["properties"]:
+        if prop["id"] == id:
+            prop.update({
+                "name": data.get("name", prop["name"]),
+                "type": data.get("type", prop["type"]),
+                "required": data.get("required", prop["required"]),
+                "description": data.get("description", prop["description"])
+            })
+            return jsonify(prop)
+    return jsonify({"error": "Property not found"}), 404
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
