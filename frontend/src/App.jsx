@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import DomainMap from './pages/DomainMap'
-import DomainWorkbench from './pages/DomainWorkbench'
-import ModelDetail from './pages/ModelDetail'
+import DomainWorkbench from './pages/DomainWorkbench/DomainWorkbench'
+import ModelDetail from './pages/ModelDetail/ModelDetail'
 
 function App() {
   return (
