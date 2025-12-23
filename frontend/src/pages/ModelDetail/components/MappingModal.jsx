@@ -193,6 +193,8 @@ const MappingModal = ({
       });
     }
 
+
+
     // 添加映射连线
     mappings.forEach(mapping => {
       // 查找数据源表节点和字段
@@ -224,12 +226,12 @@ const MappingModal = ({
       .force('link', d3.forceLink(links).id(d => d.id).distance(200))
       .force('charge', d3.forceManyBody().strength(-500))
       .force('center', d3.forceCenter(width / 2, height / 2))
-      .force('x', d3.forceX().strength(0.5).x(d => {
+      .force('x', d3.forceX().strength(1).x(d => {
         if (d.type === 'table') return width * 0.25;  // 数据源表在左侧
         if (d.type === 'model') return width * 0.75;  // 模型表在右侧
         return width / 2;
       }))
-      .force('y', d3.forceY().strength(0.5).y(d => height / 2));  // 固定Y轴位置
+      .force('y', d3.forceY().strength(1).y(d => height / 2));  // 固定Y轴位置
 
     // 添加渐变定义
     const defs = svg.append('defs');
@@ -388,14 +390,14 @@ const MappingModal = ({
               setSelectedField(null);
               setSelectedProperty(null);
               const fieldIndex = d.fields.findIndex(f => f.id === field.id);
-              const fieldY = d.y + 30 + fieldIndex * 25 + 12.5;
+              const fieldYPos = d.y + 30 + fieldIndex * 25 + 12.5;
               setDraggingFrom({
                 type: 'field',
                 id: field.id,
                 fieldId: field.id,
                 tableId: d.id,
                 x: d.x,
-                y: fieldY
+                y: fieldYPos
               });
             })
             .on('click', function(event) {
@@ -696,7 +698,11 @@ const MappingModal = ({
           const sourceNode = nodes.find(n => n.id === d.source.id);
           if (sourceNode && (sourceNode.type === 'table' || sourceNode.type === 'model')) {
             // 从左侧表的右边边缘开始连线
-            return sourceNode.x + 100; // 表格宽度的一半
+            if (sourceNode.type === 'table') {
+              return sourceNode.x + 100; // 从左侧数据源表的右边边缘开始
+            } else {
+              return sourceNode.x + 100; // 如果是模型表也从右边边缘开始
+            }
           }
           return sourceNode ? sourceNode.x : 0;
         })
@@ -705,16 +711,22 @@ const MappingModal = ({
           if (sourceNode && (sourceNode.type === 'table' || sourceNode.type === 'model')) {
             const fieldIndex = sourceNode.fields?.findIndex(f => 
               f.id === d.source.fieldId || f.id === `property_${d.source.propertyId}`
-            ) || 0;
-            return sourceNode.y + 30 + fieldIndex * 25 + 12.5;
+            );
+            if (fieldIndex !== undefined && fieldIndex !== -1) {
+              return sourceNode.y + 30 + fieldIndex * 25 + 12.5;
+            }
           }
           return sourceNode ? sourceNode.y : 0;
         })
         .attr('x2', d => {
           const targetNode = nodes.find(n => n.id === d.target.id);
           if (targetNode && (targetNode.type === 'table' || targetNode.type === 'model')) {
-            // 到右侧表的左边边缘结束连线
-            return targetNode.x - 100; // 表格宽度的一半
+            // 到右侧表的右边边缘结束连线
+            if (targetNode.type === 'model') {
+              return targetNode.x + 100; // 到右侧模型表的右边边缘结束
+            } else {
+              return targetNode.x + 100; // 如果是数据源表也到右边边缘结束
+            }
           }
           return targetNode ? targetNode.x : 0;
         })
@@ -723,10 +735,14 @@ const MappingModal = ({
           if (targetNode && (targetNode.type === 'table' || targetNode.type === 'model')) {
             const fieldIndex = targetNode.fields?.findIndex(f => 
               f.id === d.target.fieldId || f.id === `property_${d.target.propertyId}`
-            ) || 0;
-            return targetNode.y + 30 + fieldIndex * 25 + 12.5;
+            );
+            if (fieldIndex !== undefined && fieldIndex !== -1) {
+              // 确保Y坐标计算准确，对齐到字段中心
+              return targetNode.y + 30 + fieldIndex * 25 + 12.5;
+            }
           }
-          return targetNode ? targetNode.y : 0;
+          // 如果找不到目标节点或字段，使用默认值
+          return d.target.y || (nodes.find(n => n.id === d.target.id)?.y || 0);
         });
       
       nodeGroup.attr('transform', d => `translate(${d.x},${d.y})`);
@@ -746,13 +762,13 @@ const MappingModal = ({
               const fieldIndex = sourceNode.fields.findIndex(f => 
                 f.id === draggingFrom.fieldId || f.id === `property_${draggingFrom.propertyId}`
               );
-              if (fieldIndex >= 0) {
+              if (fieldIndex !== undefined && fieldIndex !== -1) {
                 sourceY = sourceNode.y + 30 + fieldIndex * 25 + 12.5;
                 // 修正预览连线的起始位置，确保连接到表的边缘
                 if (sourceNode.type === 'table') {
                   sourceX = sourceNode.x + 100; // 从左侧表的右边边缘开始
                 } else if (sourceNode.type === 'model') {
-                  sourceX = sourceNode.x - 100; // 从右侧表的左边边缘开始
+                  sourceX = sourceNode.x + 100; // 从右侧表的右边边缘开始
                 }
               }
             }
