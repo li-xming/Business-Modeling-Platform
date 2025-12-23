@@ -8,6 +8,7 @@ import DatasourceModal from './components/DatasourceModal';
 import DataModal from './components/DataModal';
 import IndicatorModal from './components/IndicatorModal';
 import MappingModal from './components/MappingModal';
+import ModalWrapper from './components/ModalWrapper';
 import PropertyManager from './modules/PropertyManager';
 import RelationManager from './modules/RelationManager';
 import SharedAttributeReference from './modules/SharedAttributeReference';
@@ -696,88 +697,17 @@ const ModelDetail = () => {
         )}
       </div>
 
-      {/* 属性模态框 */}
-      <PropertyModal 
+      {/* 模态框包装器 */}
+      <ModalWrapper
+        // Property Modal
         isPropertyModalOpen={isPropertyModalOpen}
         editingProperty={editingProperty}
         newProperty={newProperty}
         setNewProperty={setNewProperty}
         setIsPropertyModalOpen={setIsPropertyModalOpen}
         setEditingProperty={setEditingProperty}
-        handleSaveProperty={() => {
-          if (editingProperty) {
-            // 更新属性
-            fetch(`/api/property/${editingProperty.id}`, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(newProperty)
-            })
-              .then(response => response.json())
-              .then(updatedProperty => {
-                setProperties(properties.map(p => p.id === updatedProperty.id ? updatedProperty : p));
-                setIsPropertyModalOpen(false);
-                setEditingProperty(null);
-                setNewProperty({ 
-                  name: '', 
-                  type: 'string', 
-                  required: false, 
-                  description: '', 
-                  isPrimaryKey: false, 
-                  isForeignKey: false, 
-                  defaultValue: null, 
-                  constraints: [], 
-                  sensitivityLevel: 'public', 
-                  maskRule: null, 
-                  physicalColumn: '' 
-                });
-                showNotification('属性更新成功');
-              })
-              .catch(error => {
-                console.error('Failed to update property:', error);
-                showNotification('属性更新失败', 'error');
-              });
-          } else {
-            // 创建属性
-            const propertyData = {
-              ...newProperty,
-              modelId: parseInt(modelId)
-            };
-
-            fetch('/api/property', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(propertyData)
-            })
-              .then(response => response.json())
-              .then(property => {
-                setProperties([...properties, property]);
-                setIsPropertyModalOpen(false);
-                setEditingProperty(null);
-                setNewProperty({ 
-                  name: '', 
-                  type: 'string', 
-                  required: false, 
-                  description: '', 
-                  isPrimaryKey: false, 
-                  isForeignKey: false, 
-                  defaultValue: null, 
-                  constraints: [], 
-                  sensitivityLevel: 'public', 
-                  maskRule: null, 
-                  physicalColumn: '' 
-                });
-                showNotification('属性创建成功');
-              })
-              .catch(error => {
-                console.error('Failed to create property:', error);
-                showNotification('属性创建失败', 'error');
-              });
-          }
-        }}
-      />
-      
-      {/* 关系模态框 */}
-      <RelationModal 
+        
+        // Relation Modal
         isRelationModalOpen={isRelationModalOpen}
         editingRelation={editingRelation}
         newRelation={newRelation}
@@ -785,293 +715,53 @@ const ModelDetail = () => {
         setIsRelationModalOpen={setIsRelationModalOpen}
         setEditingRelation={setEditingRelation}
         allModels={allModels}
-        handleSaveRelation={() => {
-          if (editingRelation) {
-            // 更新关系
-            fetch(`/api/relation/${editingRelation.id}`, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(newRelation)
-            })
-              .then(response => response.json())
-              .then(updatedRelation => {
-                setRelations(relations.map(r => r.id === updatedRelation.id ? updatedRelation : r));
-                setIsRelationModalOpen(false);
-                setEditingRelation(null);
-                setNewRelation({
-                  name: '',
-                  sourceModelId: '',
-                  targetModelId: '',
-                  type: 'one-to-many',
-                  description: ''
-                });
-                showNotification('关系更新成功');
-              })
-              .catch(error => {
-                console.error('Failed to update relation:', error);
-                showNotification('关系更新失败', 'error');
-              });
-          } else {
-            // 创建关系
-            fetch('/api/relation', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(newRelation)
-            })
-              .then(response => response.json())
-              .then(relation => {
-                setRelations([...relations, relation]);
-                setIsRelationModalOpen(false);
-                setEditingRelation(null);
-                setNewRelation({
-                  name: '',
-                  sourceModelId: '',
-                  targetModelId: '',
-                  type: 'one-to-many',
-                  description: ''
-                });
-                showNotification('关系创建成功');
-              })
-              .catch(error => {
-                console.error('Failed to create relation:', error);
-                showNotification('关系创建失败', 'error');
-              });
-          }
-        }}
-      />
-      
-      {/* 数据源模态框 */}
-      <DatasourceModal 
+        
+        // Datasource Modal
         isDatasourceModalOpen={isDatasourceModalOpen}
         editingDatasource={editingDatasource}
         newDatasource={newDatasource}
         setNewDatasource={setNewDatasource}
         setIsDatasourceModalOpen={setIsDatasourceModalOpen}
         setEditingDatasource={setEditingDatasource}
-        handleSaveDatasource={() => {
-          if (editingDatasource) {
-            // 更新数据源
-            fetch(`/api/datasource/${editingDatasource.id}`, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(newDatasource)
-            })
-              .then(response => response.json())
-              .then(updatedDatasource => {
-                setDatasources(datasources.map(d => d.id === updatedDatasource.id ? updatedDatasource : d));
-                setIsDatasourceModalOpen(false);
-                setEditingDatasource(null);
-                setNewDatasource({
-                  name: '',
-                  type: 'mysql',
-                  url: '',
-                  tableName: '',
-                  status: 'inactive',
-                  description: ''
-                });
-                showNotification('数据源更新成功');
-              })
-              .catch(error => {
-                console.error('Failed to update datasource:', error);
-                showNotification('数据源更新失败', 'error');
-              });
-          } else {
-            // 创建数据源
-            const datasourceData = {
-              ...newDatasource,
-              modelId: parseInt(modelId)
-            };
-            fetch('/api/datasource', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(datasourceData)
-            })
-              .then(response => response.json())
-              .then(datasource => {
-                setDatasources([...datasources, datasource]);
-                setIsDatasourceModalOpen(false);
-                setEditingDatasource(null);
-                setNewDatasource({
-                  name: '',
-                  type: 'mysql',
-                  url: '',
-                  tableName: '',
-                  status: 'inactive',
-                  description: ''
-                });
-                showNotification('数据源创建成功');
-              })
-              .catch(error => {
-                console.error('Failed to create datasource:', error);
-                showNotification('数据源创建失败', 'error');
-              });
-          }
-        }}
-      />
-      
-      {/* 数据记录模态框 */}
-      <DataModal 
+        
+        // Data Modal
         isDataModalOpen={isDataModalOpen}
         editingData={editingData}
         newData={newData}
         setNewData={setNewData}
         setIsDataModalOpen={setIsDataModalOpen}
         setEditingData={setEditingData}
-        handleSaveData={() => {
-          if (editingData) {
-            // 更新数据记录
-            fetch(`/api/data/${editingData.id}`, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(newData)
-            })
-              .then(response => response.json())
-              .then(updatedData => {
-                setDataRecords(dataRecords.map(record => record.id === updatedData.id ? updatedData : record));
-                setIsDataModalOpen(false);
-                setEditingData(null);
-                setNewData({});
-                showNotification('数据记录更新成功');
-              })
-              .catch(error => {
-                console.error('Failed to update data:', error);
-                showNotification('数据记录更新失败', 'error');
-              });
-          } else {
-            // 创建数据记录
-            const dataWithId = {
-              ...newData,
-              id: dataRecords.length + 1
-            };
-            
-            fetch(`/api/data?modelId=${modelId}`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(dataWithId)
-            })
-              .then(response => response.json())
-              .then(data => {
-                setDataRecords([...dataRecords, data]);
-                setIsDataModalOpen(false);
-                setEditingData(null);
-                setNewData({});
-                showNotification('数据记录创建成功');
-              })
-              .catch(error => {
-                console.error('Failed to create data:', error);
-                showNotification('数据记录创建失败', 'error');
-              });
-          }
-        }}
-        properties={properties}
-      />
-      
-      {/* 指标模态框 */}
-      <IndicatorModal 
+        
+        // Indicator Modal
         isIndicatorModalOpen={isIndicatorModalOpen}
         editingIndicator={editingIndicator}
         newIndicator={newIndicator}
         setNewIndicator={setNewIndicator}
         setIsIndicatorModalOpen={setIsIndicatorModalOpen}
         setEditingIndicator={setEditingIndicator}
-        properties={properties}
-        handleSaveIndicator={() => {
-          if (editingIndicator) {
-            // 更新指标
-            fetch(`/api/indicator/${editingIndicator.id}`, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                ...newIndicator,
-                dimensions: newIndicator.dimensions || [],
-                filters: newIndicator.filters || [],
-                sortFields: newIndicator.sortFields || [],
-                relatedProperties: newIndicator.relatedProperties || []
-              })
-            })
-              .then(response => response.json())
-              .then(updatedIndicator => {
-                // 更新语义指标列表
-                setSemanticIndicators(semanticIndicators.map(i => i.id === updatedIndicator.id ? updatedIndicator : i));
-                
-                // 检查该指标是否在绑定列表中，如果是，也要更新绑定列表
-                const isBound = boundIndicators.some(b => b.id === updatedIndicator.id);
-                if (isBound) {
-                  setBoundIndicators(boundIndicators.map(i => i.id === updatedIndicator.id ? updatedIndicator : i));
-                }
-                
-                setIsIndicatorModalOpen(false);
-                setEditingIndicator(null);
-                setNewIndicator({
-                  name: '',
-                  expression: '',
-                  dimensions: [],
-                  filters: [],
-                  sortFields: [],
-                  returnType: 'number',
-                  description: '',
-                  status: 'draft',
-                  unit: '',
-                  relatedProperties: []
-                });
-                showNotification('指标更新成功');
-              })
-              .catch(error => {
-                console.error('Failed to update indicator:', error);
-                showNotification('指标更新失败', 'error');
-              });
-          } else {
-            // 创建指标
-            fetch('/api/indicator', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                ...newIndicator,
-                dimensions: newIndicator.dimensions || [],
-                filters: newIndicator.filters || [],
-                sortFields: newIndicator.sortFields || [],
-                relatedProperties: newIndicator.relatedProperties || [],
-                modelId: parseInt(modelId)
-              })
-            })
-              .then(response => response.json())
-              .then(indicator => {
-                setSemanticIndicators([...semanticIndicators, indicator]);
-                setIsIndicatorModalOpen(false);
-                setEditingIndicator(null);
-                setNewIndicator({
-                  name: '',
-                  expression: '',
-                  dimensions: [],
-                  filters: [],
-                  sortFields: [],
-                  returnType: 'number',
-                  description: '',
-                  status: 'draft',
-                  unit: '',
-                  relatedProperties: []
-                });
-                showNotification('指标创建成功');
-              })
-              .catch(error => {
-                console.error('Failed to create indicator:', error);
-                showNotification('指标创建失败', 'error');
-              });
-          }
-        }}
-      />
-      
-      {/* 映射模态框 */}
-      <MappingModal
-        isOpen={isMappingModalOpen}
-        onClose={() => {
-          setIsMappingModalOpen(false);
-          setMappingDatasource(null);
-        }}
-        datasource={mappingDatasource}
+        
+        // Mapping Modal
+        isMappingModalOpen={isMappingModalOpen}
+        mappingDatasource={mappingDatasource}
         model={model}
         modelProperties={properties}
         modelId={modelId}
+        setMappingDatasource={setMappingDatasource}
+        
+        // Other Props
+        properties={properties}
+        relations={relations}
+        datasources={datasources}
+        dataRecords={dataRecords}
+        semanticIndicators={semanticIndicators}
+        boundIndicators={boundIndicators}
+        showNotification={showNotification}
+        setProperties={setProperties}
+        setRelations={setRelations}
+        setDatasources={setDatasources}
+        setDataRecords={setDataRecords}
+        setSemanticIndicators={setSemanticIndicators}
+        setBoundIndicators={setBoundIndicators}
       />
       
       {/* 确认对话框 */}
