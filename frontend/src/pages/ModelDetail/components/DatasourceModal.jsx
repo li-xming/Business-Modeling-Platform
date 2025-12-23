@@ -1,4 +1,7 @@
 import React from 'react';
+import { Modal, Form, Input, Select, Button } from 'antd';
+
+const { Option } = Select;
 
 const DatasourceModal = ({ 
   isDatasourceModalOpen, 
@@ -9,87 +12,93 @@ const DatasourceModal = ({
   setEditingDatasource,
   handleSaveDatasource
 }) => {
-  if (!isDatasourceModalOpen) return null;
+  const handleCancel = () => {
+    setIsDatasourceModalOpen(false);
+    setEditingDatasource(null);
+    setNewDatasource({
+      name: '',
+      type: 'mysql',
+      url: '',
+      tableName: '',
+      status: 'inactive',
+      description: ''
+    });
+  };
 
   return (
-    <div className="modal">
-      <div className="modal-content" style={{ width: '600px' }}>
-        <h2>{editingDatasource ? '编辑数据源' : '新建数据源'}</h2>
-        
-        <div className="form-group">
-          <label>名称 *</label>
-          <input
-            type="text"
+    <Modal
+      title={editingDatasource ? '编辑数据源' : '新建数据源'}
+      open={isDatasourceModalOpen}
+      onCancel={handleCancel}
+      footer={[
+        <Button key="cancel" onClick={handleCancel}>
+          取消
+        </Button>,
+        <Button key="submit" type="primary" onClick={handleSaveDatasource}>
+          {editingDatasource ? '更新' : '确定'}
+        </Button>
+      ]}
+      width={600}
+    >
+      <Form layout="vertical">
+        <Form.Item
+          label="名称 *"
+          rules={[{ required: true, message: '请输入数据源名称' }]}
+        >
+          <Input
             value={newDatasource.name}
             onChange={(e) => setNewDatasource({ ...newDatasource, name: e.target.value })}
             placeholder="数据源名称"
           />
-        </div>
+        </Form.Item>
         
-        <div className="form-group">
-          <label>类型 *</label>
-          <select
+        <Form.Item
+          label="类型 *"
+          rules={[{ required: true, message: '请选择数据源类型' }]}
+        >
+          <Select
             value={newDatasource.type}
-            onChange={(e) => setNewDatasource({ ...newDatasource, type: e.target.value })}
+            onChange={(value) => setNewDatasource({ ...newDatasource, type: value })}
+            placeholder="选择数据源类型"
           >
-            <option value="mysql">MySQL</option>
-            <option value="oracle">Oracle</option>
-            <option value="postgresql">PostgreSQL</option>
-            <option value="sqlserver">SQL Server</option>
-            <option value="kafka">Kafka</option>
-            <option value="api">API</option>
-          </select>
-        </div>
+            <Option value="mysql">MySQL</Option>
+            <Option value="oracle">Oracle</Option>
+            <Option value="postgresql">PostgreSQL</Option>
+            <Option value="sqlserver">SQL Server</Option>
+            <Option value="kafka">Kafka</Option>
+            <Option value="api">API</Option>
+          </Select>
+        </Form.Item>
         
-        <div className="form-group">
-          <label>URL *</label>
-          <input
-            type="text"
+        <Form.Item
+          label="URL *"
+          rules={[{ required: true, message: '请输入数据源URL' }]}
+        >
+          <Input
             value={newDatasource.url}
             onChange={(e) => setNewDatasource({ ...newDatasource, url: e.target.value })}
             placeholder="例如: jdbc:mysql://localhost:3306/database"
           />
-        </div>
+        </Form.Item>
         
-        <div className="form-group">
-          <label>表名/主题名</label>
-          <input
-            type="text"
+        <Form.Item label="表名/主题名">
+          <Input
             value={newDatasource.tableName}
             onChange={(e) => setNewDatasource({ ...newDatasource, tableName: e.target.value })}
             placeholder="表名或Kafka主题名"
           />
-        </div>
+        </Form.Item>
         
-        <div className="form-group">
-          <label>描述</label>
-          <textarea
+        <Form.Item label="描述">
+          <Input.TextArea
             value={newDatasource.description}
             onChange={(e) => setNewDatasource({ ...newDatasource, description: e.target.value })}
             placeholder="数据源描述"
             rows={3}
-          ></textarea>
-        </div>
-        
-        <div className="form-actions">
-          <button className="cancel" onClick={() => {
-            setIsDatasourceModalOpen(false);
-            setEditingDatasource(null);
-            setNewDatasource({
-              name: '',
-              type: 'mysql',
-              url: '',
-              tableName: '',
-              status: 'inactive',
-              description: ''
-            });
-          }}>取消</button>
-          <button className="submit" onClick={handleSaveDatasource}>
-            {editingDatasource ? '更新' : '确定'}
-          </button>
-        </div>
-      </div>
-    </div>
+          />
+        </Form.Item>
+      </Form>
+    </Modal>
   );
 };
 

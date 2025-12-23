@@ -1,24 +1,22 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { message } from 'antd';
 
 const Notification = ({ notification }) => {
-  if (!notification.show) return null;
+  useEffect(() => {
+    if (notification.show) {
+      if (notification.type === 'success') {
+        message.success(notification.message);
+      } else if (notification.type === 'error') {
+        message.error(notification.message);
+      } else if (notification.type === 'warning') {
+        message.warning(notification.message);
+      } else {
+        message.info(notification.message);
+      }
+    }
+  }, [notification]);
 
-  return (
-    <div style={{
-      position: 'fixed',
-      top: '20px',
-      right: '20px',
-      padding: '12px 24px',
-      borderRadius: '8px',
-      backgroundColor: notification.type === 'success' ? '#10b981' : '#ef4444',
-      color: 'white',
-      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-      zIndex: 1000,
-      animation: 'slideIn 0.3s ease'
-    }}>
-      {notification.message}
-    </div>
-  );
+  return null;
 };
 
 export default Notification;

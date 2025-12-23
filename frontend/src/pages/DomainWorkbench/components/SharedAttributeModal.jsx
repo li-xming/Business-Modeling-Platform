@@ -1,4 +1,7 @@
 import React from 'react';
+import { Modal, Form, Input, Select, Button } from 'antd';
+
+const { Option } = Select;
 
 const SharedAttributeModal = ({ 
   isAttrModalOpen, 
@@ -9,77 +12,82 @@ const SharedAttributeModal = ({
   setIsAttrModalOpen, 
   setEditingAttr 
 }) => {
-  if (!isAttrModalOpen) return null;
+  const handleCancel = () => {
+    setIsAttrModalOpen(false);
+    setEditingAttr(null);
+  };
 
   return (
-    <div className="modal">
-      <div className="modal-content">
-        <h2>{editingAttr ? '编辑共享属性' : '新建共享属性'}</h2>
-        <div className="form-group">
-          <label>名称</label>
-          <input
-            type="text"
+    <Modal
+      title={editingAttr ? '编辑共享属性' : '新建共享属性'}
+      open={isAttrModalOpen}
+      onCancel={handleCancel}
+      footer={[
+        <Button key="cancel" onClick={handleCancel}>
+          取消
+        </Button>,
+        <Button key="submit" type="primary" onClick={handleSaveAttr}>
+          {editingAttr ? '更新' : '创建'}
+        </Button>
+      ]}
+    >
+      <Form layout="vertical">
+        <Form.Item
+          label="名称"
+          rules={[{ required: true, message: '请输入共享属性名称' }]}
+        >
+          <Input
             value={newAttr.name}
             onChange={(e) => setNewAttr({ ...newAttr, name: e.target.value })}
           />
-        </div>
-        <div className="form-group">
-          <label>数据类型</label>
-          <select
+        </Form.Item>
+        <Form.Item
+          label="数据类型"
+          rules={[{ required: true, message: '请选择数据类型' }]}
+        >
+          <Select
             value={newAttr.type}
-            onChange={(e) => setNewAttr({ ...newAttr, type: e.target.value })}
+            onChange={(value) => setNewAttr({ ...newAttr, type: value })}
+            placeholder="选择数据类型"
           >
-            <option value="string">字符串</option>
-            <option value="number">数字</option>
-            <option value="date">日期</option>
-            <option value="datetime">日期时间</option>
-            <option value="boolean">布尔值</option>
-            <option value="text">文本</option>
-          </select>
-        </div>
-        <div className="form-group">
-          <label>长度</label>
-          <input
-            type="text"
+            <Option value="string">字符串</Option>
+            <Option value="number">数字</Option>
+            <Option value="date">日期</Option>
+            <Option value="datetime">日期时间</Option>
+            <Option value="boolean">布尔值</Option>
+            <Option value="text">文本</Option>
+          </Select>
+        </Form.Item>
+        <Form.Item label="长度">
+          <Input
             value={newAttr.length}
             onChange={(e) => setNewAttr({ ...newAttr, length: e.target.value })}
             placeholder="可选，如：255"
           />
-        </div>
-        <div className="form-group">
-          <label>精度</label>
-          <input
-            type="text"
+        </Form.Item>
+        <Form.Item label="精度">
+          <Input
             value={newAttr.precision}
             onChange={(e) => setNewAttr({ ...newAttr, precision: e.target.value })}
             placeholder="可选，如：0（整数）、2（两位小数）"
           />
-        </div>
-        <div className="form-group">
-          <label>描述</label>
-          <textarea
+        </Form.Item>
+        <Form.Item label="描述">
+          <Input.TextArea
             value={newAttr.description}
             onChange={(e) => setNewAttr({ ...newAttr, description: e.target.value })}
-          ></textarea>
-        </div>
-        <div className="form-group">
-          <label>值域（可选）</label>
-          <input
-            type="text"
+            rows={4}
+          />
+        </Form.Item>
+        <Form.Item label="值域（可选）">
+          <Input
             value={newAttr.valueRange}
             onChange={(e) => setNewAttr({ ...newAttr, valueRange: e.target.value })}
             placeholder="如：0,1 或 男,女"
           />
-        </div>
-        <div className="form-actions">
-          <button className="cancel" onClick={() => {
-            setIsAttrModalOpen(false);
-            setEditingAttr(null);
-          }}>取消</button>
-          <button className="submit" onClick={handleSaveAttr}>{editingAttr ? '更新' : '创建'}</button>
-        </div>
-      </div>
-    </div>
+        </Form.Item>
+      </Form>
+    </Modal>
   );
 };
 

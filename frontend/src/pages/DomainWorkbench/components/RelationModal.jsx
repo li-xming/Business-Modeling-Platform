@@ -1,4 +1,7 @@
 import React from 'react';
+import { Modal, Form, Input, Select, Checkbox, Button } from 'antd';
+
+const { Option } = Select;
 
 const RelationModal = ({ 
   isRelationModalOpen, 
@@ -10,81 +13,97 @@ const RelationModal = ({
   setEditingRelation,
   models
 }) => {
-  if (!isRelationModalOpen) return null;
+  const handleCancel = () => {
+    setIsRelationModalOpen(false);
+    setEditingRelation(null);
+  };
 
   return (
-    <div className="modal">
-      <div className="modal-content">
-        <h2>{editingRelation ? '编辑关系' : '新建关系'}</h2>
-        <div className="form-group">
-          <label>名称</label>
-          <input
-            type="text"
+    <Modal
+      title={editingRelation ? '编辑关系' : '新建关系'}
+      open={isRelationModalOpen}
+      onCancel={handleCancel}
+      footer={[
+        <Button key="cancel" onClick={handleCancel}>
+          取消
+        </Button>,
+        <Button key="submit" type="primary" onClick={handleSaveRelation}>
+          {editingRelation ? '更新' : '创建'}
+        </Button>
+      ]}
+    >
+      <Form layout="vertical">
+        <Form.Item
+          label="名称"
+          rules={[{ required: true, message: '请输入关系名称' }]}
+        >
+          <Input
             value={newRelation.name}
             onChange={(e) => setNewRelation({ ...newRelation, name: e.target.value })}
           />
-        </div>
-        <div className="form-group">
-          <label>源模型</label>
-          <select
+        </Form.Item>
+        <Form.Item
+          label="源模型"
+          rules={[{ required: true, message: '请选择源模型' }]}
+        >
+          <Select
             value={newRelation.sourceModelId}
-            onChange={(e) => setNewRelation({ ...newRelation, sourceModelId: e.target.value })}
+            onChange={(value) => setNewRelation({ ...newRelation, sourceModelId: value })}
+            placeholder="选择源模型"
           >
-            <option value="">选择源模型</option>
+            <Option value="">选择源模型</Option>
             {models.map(model => (
-              <option key={model.id} value={model.id}>{model.name}</option>
+              <Option key={model.id} value={model.id}>{model.name}</Option>
             ))}
-          </select>
-        </div>
-        <div className="form-group">
-          <label>目标模型</label>
-          <select
+          </Select>
+        </Form.Item>
+        <Form.Item
+          label="目标模型"
+          rules={[{ required: true, message: '请选择目标模型' }]}
+        >
+          <Select
             value={newRelation.targetModelId}
-            onChange={(e) => setNewRelation({ ...newRelation, targetModelId: e.target.value })}
+            onChange={(value) => setNewRelation({ ...newRelation, targetModelId: value })}
+            placeholder="选择目标模型"
           >
-            <option value="">选择目标模型</option>
+            <Option value="">选择目标模型</Option>
             {models.map(model => (
-              <option key={model.id} value={model.id}>{model.name}</option>
+              <Option key={model.id} value={model.id}>{model.name}</Option>
             ))}
-          </select>
-        </div>
-        <div className="form-group">
-          <label>关系类型</label>
-          <select
+          </Select>
+        </Form.Item>
+        <Form.Item
+          label="关系类型"
+          rules={[{ required: true, message: '请选择关系类型' }]}
+        >
+          <Select
             value={newRelation.type}
-            onChange={(e) => setNewRelation({ ...newRelation, type: e.target.value })}
+            onChange={(value) => setNewRelation({ ...newRelation, type: value })}
+            placeholder="选择关系类型"
           >
-            <option value="one-to-one">一对一</option>
-            <option value="one-to-many">一对多</option>
-            <option value="many-to-one">多对一</option>
-            <option value="many-to-many">多对多</option>
-          </select>
-        </div>
-        <div className="form-group">
-          <label>描述</label>
-          <textarea
+            <Option value="one-to-one">一对一</Option>
+            <Option value="one-to-many">一对多</Option>
+            <Option value="many-to-one">多对一</Option>
+            <Option value="many-to-many">多对多</Option>
+          </Select>
+        </Form.Item>
+        <Form.Item label="描述">
+          <Input.TextArea
             value={newRelation.description}
             onChange={(e) => setNewRelation({ ...newRelation, description: e.target.value })}
-          ></textarea>
-        </div>
-        <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <input
-            type="checkbox"
-            id="enabled"
+            rows={4}
+          />
+        </Form.Item>
+        <Form.Item>
+          <Checkbox
             checked={newRelation.enabled}
             onChange={(e) => setNewRelation({ ...newRelation, enabled: e.target.checked })}
-          />
-          <label htmlFor="enabled" style={{ marginBottom: 0 }}>启用</label>
-        </div>
-        <div className="form-actions">
-          <button className="cancel" onClick={() => {
-            setIsRelationModalOpen(false);
-            setEditingRelation(null);
-          }}>取消</button>
-          <button className="submit" onClick={handleSaveRelation}>{editingRelation ? '更新' : '创建'}</button>
-        </div>
-      </div>
-    </div>
+          >
+            启用
+          </Checkbox>
+        </Form.Item>
+      </Form>
+    </Modal>
   );
 };
 

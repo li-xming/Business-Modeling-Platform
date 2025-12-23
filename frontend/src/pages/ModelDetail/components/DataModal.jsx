@@ -1,4 +1,5 @@
 import React from 'react';
+import { Modal, Form, Input, Button } from 'antd';
 
 const DataModal = ({ 
   isDataModalOpen, 
@@ -10,37 +11,44 @@ const DataModal = ({
   handleSaveData,
   properties
 }) => {
-  if (!isDataModalOpen) return null;
+  const handleCancel = () => {
+    setIsDataModalOpen(false);
+    setEditingData(null);
+    setNewData({});
+  };
 
   return (
-    <div className="modal">
-      <div className="modal-content" style={{ width: '600px' }}>
-        <h2>{editingData ? '编辑数据记录' : '新建数据记录'}</h2>
-        
+    <Modal
+      title={editingData ? '编辑数据记录' : '新建数据记录'}
+      open={isDataModalOpen}
+      onCancel={handleCancel}
+      footer={[
+        <Button key="cancel" onClick={handleCancel}>
+          取消
+        </Button>,
+        <Button key="submit" type="primary" onClick={handleSaveData}>
+          {editingData ? '更新' : '确定'}
+        </Button>
+      ]}
+      width={600}
+    >
+      <Form layout="vertical">
         {properties.map(property => (
-          <div className="form-group" key={property.id}>
-            <label>{property.name}{property.required && ' *'}</label>
-            <input
+          <Form.Item
+            key={property.id}
+            label={`${property.name}${property.required && ' *'}`}
+            rules={property.required ? [{ required: true, message: `请输入${property.name}` }] : []}
+          >
+            <Input
               type={property.type === 'number' ? 'number' : 'text'}
               value={newData[property.name] || ''}
               onChange={(e) => setNewData({ ...newData, [property.name]: e.target.value })}
               placeholder={property.description || property.name}
             />
-          </div>
+          </Form.Item>
         ))}
-        
-        <div className="form-actions">
-          <button className="cancel" onClick={() => {
-            setIsDataModalOpen(false);
-            setEditingData(null);
-            setNewData({});
-          }}>取消</button>
-          <button className="submit" onClick={handleSaveData}>
-            {editingData ? '更新' : '确定'}
-          </button>
-        </div>
-      </div>
-    </div>
+      </Form>
+    </Modal>
   );
 };
 
