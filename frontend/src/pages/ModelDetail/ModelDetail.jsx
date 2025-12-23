@@ -14,6 +14,7 @@ import SharedAttributeReference from './modules/SharedAttributeReference';
 import DatasourceManager from './modules/DatasourceManager';
 import DataManager from './modules/DataManager';
 import SemanticIndicatorManager from './modules/SemanticIndicatorManager';
+import ActionManager from './modules/ActionManager';
 import BloodlineAnalyzer from './modules/BloodlineAnalyzer';
 
 const ModelDetail = () => {
@@ -565,6 +566,12 @@ const ModelDetail = () => {
         >
           血缘分析
         </button>
+        <button
+          className={activeTab === 'actions' ? 'active' : ''}
+          onClick={() => setActiveTab('actions')}
+        >
+          动作
+        </button>
       </div>
 
       {/* 内容区域 */}
@@ -675,6 +682,16 @@ const ModelDetail = () => {
             bloodlineData={bloodlineData}
             allData={{ models: allModels, properties: properties }}
             relations={relations}
+          />
+        )}
+
+        {/* 动作Tab */}
+        {activeTab === 'actions' && (
+          <ActionManager 
+            modelId={modelId}
+            properties={properties}
+            showNotification={showNotification}
+            showConfirmDialog={showConfirmDialog}
           />
         )}
       </div>

@@ -856,6 +856,35 @@ body {
   overflow-y: auto;
 }
 
+/* 动作管理器样式 */
+.action-manager {
+  background: var(--bg-primary);
+}
+
+.action-manager .status-badge.get {
+  background: #dbeafe;
+  color: #2563eb;
+  border: 1px solid #93c5fd;
+}
+
+.action-manager .status-badge.post {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #86efac;
+}
+
+.action-manager .status-badge.put {
+  background: #fef3c7;
+  color: #d97706;
+  border: 1px solid #fbbf24;
+}
+
+.action-manager .status-badge.delete {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+}
+
 .table-container::-webkit-scrollbar {
   width: 8px;
 }
