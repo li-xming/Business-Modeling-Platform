@@ -14,6 +14,7 @@ const ModelMap = ({
 }) => {
   const svgRef = useRef(null);
   const containerRef = useRef(null);
+  const timerRef = useRef(null);
 
   // 使用D3渲染模型地图
   useEffect(() => {
@@ -228,12 +229,28 @@ const ModelMap = ({
     // 鼠标事件处理
     nodeGroup.on('click', (event, d) => {
       event.stopPropagation();
-      setHoveredModel(d);
-      setIsDrawerVisible(!isDrawerVisible);
+      // 使用定时器来区分单击和双击
+      if (timerRef.current) {
+        // 如果已有定时器，说明是双击的第二次点击，取消单击事件
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      } else {
+        // 设置定时器，如果在300ms内没有再次点击，则执行单击事件
+        timerRef.current = setTimeout(() => {
+          setHoveredModel(d);
+          setIsDrawerVisible(!isDrawerVisible);
+          timerRef.current = null;
+        }, 300);
+      }
     });
 
     nodeGroup.on('dblclick', (event, d) => {
       event.stopPropagation();
+      // 如果有定时器，清除它，防止单击事件执行
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
       if (d.type === 'model') {
         // 只有模型节点可以双击进入详情页
         window.location.href = `/model/${d.originalId}`;

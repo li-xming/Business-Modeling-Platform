@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import * as d3 from 'd3'
+import { Modal, Form, Input, Button, Drawer, Typography } from 'antd'
+
+const { Title, Text } = Typography
 
 const DomainMap = () => {
   const navigate = useNavigate()
@@ -238,12 +241,28 @@ const DomainMap = () => {
     // 鼠标事件处理
     nodeGroup.on('click', (event, d) => {
       event.stopPropagation()
-      setHoveredDomain(d)
-      setIsDrawerVisible(!isDrawerVisible)
+      // 使用定时器来区分单击和双击
+      if (timerRef.current) {
+        // 如果已有定时器，说明是双击的第二次点击，取消单击事件
+        clearTimeout(timerRef.current)
+        timerRef.current = null
+      } else {
+        // 设置定时器，如果在300ms内没有再次点击，则执行单击事件
+        timerRef.current = setTimeout(() => {
+          setHoveredDomain(d)
+          setIsDrawerVisible(!isDrawerVisible)
+          timerRef.current = null
+        }, 300)
+      }
     })
 
     nodeGroup.on('dblclick', (event, d) => {
       event.stopPropagation()
+      // 如果有定时器，清除它，防止单击事件执行
+      if (timerRef.current) {
+        clearTimeout(timerRef.current)
+        timerRef.current = null
+      }
       if (d.type === 'model') {
         // 模型节点，跳转到模型详情
         navigate(`/model/${d.originalId}`)
@@ -350,6 +369,11 @@ const DomainMap = () => {
       })
       .catch(error => console.error('Failed to create domain:', error))
   }
+  
+  const handleCancelModal = () => {
+    setIsModalOpen(false)
+    setNewDomain({ name: '', description: '', owner: '' })
+  }
 
   // 处理导出
   const handleExport = () => {
@@ -410,58 +434,78 @@ const DomainMap = () => {
       </div>
 
       {/* 悬停抽屉 */}
-      <div className={`hover-drawer ${isDrawerVisible ? 'visible' : ''}`}>
+      <Drawer
+        title="业务域信息"
+        placement="right"
+        closable={true}
+        onClose={() => setIsDrawerVisible(false)}
+        open={isDrawerVisible}
+        width={360}
+      >
         {hoveredDomain && (
-          <div style={{ padding: '16px' }}>
-            <h3>{hoveredDomain.name}</h3>
-            <p>描述: {hoveredDomain.description}</p>
-            <p>负责人: {hoveredDomain.owner}</p>
-            <p>最近变更: {hoveredDomain.updatedAt}</p>
-            <button
-              className="enter-domain-btn"
+          <div>
+            <Title level={4}>{hoveredDomain.name}</Title>
+            <div style={{ marginBottom: '16px' }}>
+              <Text strong>描述: </Text>
+              <Text>{hoveredDomain.description || '暂无描述'}</Text>
+            </div>
+            <div style={{ marginBottom: '16px' }}>
+              <Text strong>负责人: </Text>
+              <Text>{hoveredDomain.owner || '暂无负责人'}</Text>
+            </div>
+            <div style={{ marginBottom: '24px' }}>
+              <Text strong>最近变更: </Text>
+              <Text>{hoveredDomain.updatedAt || '暂无变更记录'}</Text>
+            </div>
+            <Button
+              type="primary"
               onClick={() => navigate(`/domain/${hoveredDomain.originalId}`)}
             >
               进入该域
-            </button>
+            </Button>
           </div>
         )}
-      </div>
+      </Drawer>
 
       {/* 新建域模态框 */}
-      {isModalOpen && (
-        <div className="modal">
-          <div className="modal-content">
-            <h2>新建业务域</h2>
-            <div className="form-group">
-              <label>名称</label>
-              <input
-                type="text"
-                value={newDomain.name}
-                onChange={(e) => setNewDomain({ ...newDomain, name: e.target.value })}
-              />
-            </div>
-            <div className="form-group">
-              <label>描述</label>
-              <textarea
-                value={newDomain.description}
-                onChange={(e) => setNewDomain({ ...newDomain, description: e.target.value })}
-              ></textarea>
-            </div>
-            <div className="form-group">
-              <label>负责人</label>
-              <input
-                type="text"
-                value={newDomain.owner}
-                onChange={(e) => setNewDomain({ ...newDomain, owner: e.target.value })}
-              />
-            </div>
-            <div className="form-actions">
-              <button className="cancel" onClick={() => setIsModalOpen(false)}>取消</button>
-              <button className="submit" onClick={handleCreateDomain}>确定</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        title="新建业务域"
+        open={isModalOpen}
+        onCancel={handleCancelModal}
+        footer={[
+          <Button key="cancel" onClick={handleCancelModal}>
+            取消
+          </Button>,
+          <Button key="submit" type="primary" onClick={handleCreateDomain}>
+            确定
+          </Button>
+        ]}
+      >
+        <Form layout="vertical">
+          <Form.Item
+            label="名称"
+            rules={[{ required: true, message: '请输入业务域名称' }]}
+          >
+            <Input
+              value={newDomain.name}
+              onChange={(e) => setNewDomain({ ...newDomain, name: e.target.value })}
+            />
+          </Form.Item>
+          <Form.Item label="描述">
+            <Input.TextArea
+              value={newDomain.description}
+              onChange={(e) => setNewDomain({ ...newDomain, description: e.target.value })}
+              rows={4}
+            />
+          </Form.Item>
+          <Form.Item label="负责人">
+            <Input
+              value={newDomain.owner}
+              onChange={(e) => setNewDomain({ ...newDomain, owner: e.target.value })}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   )
 }

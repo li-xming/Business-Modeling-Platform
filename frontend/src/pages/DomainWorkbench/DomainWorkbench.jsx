@@ -813,6 +813,7 @@ const DomainWorkbench = () => {
         hoveredModel={hoveredModel}
         allData={allData}
         relations={relations}
+        onClose={() => setIsDrawerVisible(false)}
       />
 
       {/* 新建/编辑模型模态框 */}
