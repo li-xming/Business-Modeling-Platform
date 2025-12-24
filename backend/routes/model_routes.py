@@ -20,10 +20,11 @@ def get_models():
         model_list = [{
             "id": row[0],
             "name": row[1],
-            "description": row[2],
-            "creator": row[3],
-            "updatedAt": row[4],
-            "domainId": row[5]
+            "code": row[2],
+            "description": row[3],
+            "creator": row[4],
+            "updatedAt": row[5],
+            "domainId": row[6]
         } for row in models]
         
         # 获取模型ID列表
@@ -61,14 +62,15 @@ def create_model():
         
         # 插入新模型
         conn.execute(
-            "INSERT INTO models (id, name, description, creator, updatedAt, domainId) VALUES (?, ?, ?, ?, ?, ?)",
-            (next_id, data["name"], data["description"], "当前用户", get_current_date(), int(data["domainId"]))
+            "INSERT INTO models (id, name, code, description, creator, updatedAt, domainId) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (next_id, data["name"], data["code"], data["description"], "当前用户", get_current_date(), int(data["domainId"]))
         )
         
         # 返回新创建的模型
         new_model = {
             "id": next_id,
             "name": data["name"],
+            "code": data["code"],
             "description": data["description"],
             "creator": "当前用户",
             "updatedAt": get_current_date(),
@@ -91,14 +93,15 @@ def update_model(id):
         
         # 更新模型
         conn.execute(
-            "UPDATE models SET name = ?, description = ?, updatedAt = ? WHERE id = ?",
-            (data["name"], data["description"], get_current_date(), id)
+            "UPDATE models SET name = ?, code = ?, description = ?, updatedAt = ? WHERE id = ?",
+            (data["name"], data["code"], data["description"], get_current_date(), id)
         )
         
         # 返回更新后的模型
         updated_model = {
             "id": id,
             "name": data["name"],
+            "code": data["code"],
             "description": data["description"],
             "creator": model[3],
             "updatedAt": get_current_date(),

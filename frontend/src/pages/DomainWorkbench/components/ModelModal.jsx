@@ -13,7 +13,7 @@ const ModelModal = ({
   const handleCancel = () => {
     setIsModalOpen(false);
     setEditingModel(null);
-    setNewModel({ name: '', description: '', parentId: '', tags: '' });
+    setNewModel({ name: '', code: '', description: '', parentId: '', tags: '' });
   };
 
   return (
@@ -38,6 +38,16 @@ const ModelModal = ({
           <Input
             value={newModel.name}
             onChange={(e) => setNewModel({ ...newModel, name: e.target.value })}
+          />
+        </Form.Item>
+        <Form.Item
+          label="Code"
+          rules={[{ required: true, message: '请输入模型Code' }]}
+        >
+          <Input
+            value={newModel.code}
+            onChange={(e) => setNewModel({ ...newModel, code: e.target.value })}
+            placeholder="例如：user, order, product"
           />
         </Form.Item>
         <Form.Item label="描述">

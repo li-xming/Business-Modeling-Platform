@@ -34,22 +34,23 @@ def get_properties():
             property_item = {
                 "id": row[0],
                 "name": row[1],
-                "type": row[2],
-                "required": row[3],
-                "description": row[4],
-                "modelId": row[5],
-                "isPrimaryKey": row[6],
-                "isForeignKey": row[7],
-                "defaultValue": row[8],
+                "code": row[2],
+                "type": row[3],
+                "required": row[4],
+                "description": row[5],
+                "modelId": row[6],
+                "isPrimaryKey": row[7],
+                "isForeignKey": row[8],
+                "defaultValue": row[9],
                 "constraints": constraints,
-                "sensitivityLevel": row[10],
-                "maskRule": row[11],
-                "physicalColumn": row[12]
+                "sensitivityLevel": row[11],
+                "maskRule": row[12],
+                "physicalColumn": row[13]
             }
             # 如果是外键，添加外键表和列信息
             if row[7]:
-                property_item["foreignKeyTable"] = row[13]
-                property_item["foreignKeyColumn"] = row[14]
+                property_item["foreignKeyTable"] = row[14]
+                property_item["foreignKeyColumn"] = row[15]
             property_list.append(property_item)
         
         return jsonify(property_list)
@@ -72,9 +73,9 @@ def create_property():
         
         # 插入新属性
         conn.execute(
-            "INSERT INTO properties (id, name, type, required, description, modelId, isPrimaryKey, isForeignKey, defaultValue, constraints, sensitivityLevel, maskRule, physicalColumn, foreignKeyTable, foreignKeyColumn) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO properties (id, name, code, type, required, description, modelId, isPrimaryKey, isForeignKey, defaultValue, constraints, sensitivityLevel, maskRule, physicalColumn, foreignKeyTable, foreignKeyColumn) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
-                next_id, data["name"], data["type"], data["required"],
+                next_id, data["name"], data.get("code", data["name"].lower().replace(" ", "_")), data["type"], data["required"],
                 data["description"], int(data["modelId"]),
                 data.get("isPrimaryKey", False), data.get("isForeignKey", False),
                 data.get("defaultValue", None), constraints_json,
@@ -90,6 +91,7 @@ def create_property():
         new_property = {
             "id": next_id,
             "name": data["name"],
+            "code": data.get("code", data["name"].lower().replace(" ", "_")),
             "type": data["type"],
             "required": data["required"],
             "description": data["description"],
@@ -125,14 +127,15 @@ def update_property(id):
         
         # 更新属性
         conn.execute(
-            "UPDATE properties SET name = ?, type = ?, required = ?, description = ?, isPrimaryKey = ?, isForeignKey = ?, defaultValue = ?, constraints = ?, sensitivityLevel = ?, maskRule = ?, physicalColumn = ?, foreignKeyTable = ?, foreignKeyColumn = ? WHERE id = ?",
-            (data.get("name", prop[1]), data.get("type", prop[2]), data.get("required", prop[3]), data.get("description", prop[4]), data.get("isPrimaryKey", prop[6]), data.get("isForeignKey", prop[7]), data.get("defaultValue", prop[8]), constraints, data.get("sensitivityLevel", prop[10]), data.get("maskRule", prop[11]), data.get("physicalColumn", prop[12]), data.get("foreignKeyTable"), data.get("foreignKeyColumn"), id)
+            "UPDATE properties SET name = ?, code = ?, type = ?, required = ?, description = ?, isPrimaryKey = ?, isForeignKey = ?, defaultValue = ?, constraints = ?, sensitivityLevel = ?, maskRule = ?, physicalColumn = ?, foreignKeyTable = ?, foreignKeyColumn = ? WHERE id = ?",
+            (data.get("name", prop[1]), data.get("code", prop[15] if len(prop) > 15 else prop[1].lower().replace(" ", "_")), data.get("type", prop[2]), data.get("required", prop[3]), data.get("description", prop[4]), data.get("isPrimaryKey", prop[6]), data.get("isForeignKey", prop[7]), data.get("defaultValue", prop[8]), constraints, data.get("sensitivityLevel", prop[10]), data.get("maskRule", prop[11]), data.get("physicalColumn", prop[12]), data.get("foreignKeyTable"), data.get("foreignKeyColumn"), id)
         )
         
         # 返回更新后的属性
         updated_prop = {
             "id": id,
             "name": data.get("name", prop[1]),
+            "code": data.get("code", prop[15] if len(prop) > 15 else prop[1].lower().replace(" ", "_")),
             "type": data.get("type", prop[2]),
             "required": data.get("required", prop[3]),
             "description": data.get("description", prop[4]),

@@ -25,7 +25,7 @@ const DomainWorkbench = () => {
   const [isDrawerVisible, setIsDrawerVisible] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingModel, setEditingModel] = useState(null);
-  const [newModel, setNewModel] = useState({ name: '', description: '', parentId: '', tags: '' });
+  const [newModel, setNewModel] = useState({ name: '', code: '', description: '', parentId: '', tags: '' });
   const [searchTerm, setSearchTerm] = useState('');
   const [currentDomain, setCurrentDomain] = useState(null);
   const [isPropertyExpanded, setIsPropertyExpanded] = useState(false);
@@ -189,7 +189,7 @@ const DomainWorkbench = () => {
         setModels([...models, model]);
         setIsModalOpen(false);
         setEditingModel(null);
-        setNewModel({ name: '', description: '', parentId: '', tags: '' });
+        setNewModel({ name: '', code: '', description: '', parentId: '', tags: '' });
         showNotification('模型创建成功');
       })
       .catch(error => {
@@ -203,6 +203,7 @@ const DomainWorkbench = () => {
     setEditingModel(model);
     setNewModel({
       name: model.name,
+      code: model.code || '',
       description: model.description,
       parentId: model.parentId || '',
       tags: model.tags || ''
@@ -224,7 +225,7 @@ const DomainWorkbench = () => {
         setModels(models.map(m => m.id === updatedModel.id ? updatedModel : m));
         setIsModalOpen(false);
         setEditingModel(null);
-        setNewModel({ name: '', description: '', parentId: '', tags: '' });
+        setNewModel({ name: '', code: '', description: '', parentId: '', tags: '' });
         showNotification('模型更新成功');
       })
       .catch(error => {
@@ -939,6 +940,8 @@ const DomainWorkbench = () => {
             handleDeleteModel={handleDeleteModel}
             viewMode={modelViewMode}
             setViewMode={setModelViewMode}
+            setIsModalOpen={setIsModalOpen}
+            setEditingModel={setEditingModel}
           />
         )}
 

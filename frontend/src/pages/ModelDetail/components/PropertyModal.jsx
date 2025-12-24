@@ -17,6 +17,7 @@ const PropertyModal = ({
     setEditingProperty(null);
     setNewProperty({ 
       name: '', 
+      code: '',
       type: 'string', 
       required: false, 
       description: '', 
@@ -54,6 +55,17 @@ const PropertyModal = ({
             value={newProperty.name}
             onChange={(e) => setNewProperty({ ...newProperty, name: e.target.value })}
             placeholder="属性名称"
+          />
+        </Form.Item>
+        
+        <Form.Item
+          label="Code *"
+          rules={[{ required: true, message: '请输入属性Code' }]}
+        >
+          <Input
+            value={newProperty.code}
+            onChange={(e) => setNewProperty({ ...newProperty, code: e.target.value })}
+            placeholder="例如：user_name, email, phone"
           />
         </Form.Item>
         

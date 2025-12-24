@@ -31,6 +31,7 @@ const ModelDetail = () => {
   const [editingProperty, setEditingProperty] = useState(null);
   const [newProperty, setNewProperty] = useState({ 
     name: '', 
+    code: '',
     type: 'string', 
     required: false, 
     description: '', 
@@ -360,6 +361,7 @@ const ModelDetail = () => {
               const updatedModel = {
                 id: parseInt(modelId),
                 name: foundModel.name,
+                code: foundModel.code,
                 description: foundModel.description,
                 domainId: foundModel.domainId,
                 domainName: domain?.name || `域ID: ${foundModel.domainId}`
@@ -381,6 +383,7 @@ const ModelDetail = () => {
               const updatedModel = {
                 id: parseInt(modelId),
                 name: foundModel.name,
+                code: foundModel.code,
                 description: foundModel.description,
                 domainId: foundModel.domainId,
                 domainName: `域ID: ${foundModel.domainId}`

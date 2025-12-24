@@ -9,7 +9,9 @@ const ModelManager = ({
   handleEditModel, 
   handleDeleteModel,
   viewMode,
-  setViewMode
+  setViewMode,
+  setIsModalOpen,
+  setEditingModel
 }) => {
   const navigate = useNavigate();
   
@@ -38,7 +40,7 @@ const ModelManager = ({
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <button onClick={() => navigate('/model/create')}>新建模型</button>
+        <button onClick={() => { setIsModalOpen(true); setEditingModel(null); }}>新建模型</button>
         <button onClick={() => console.log('导入模型')}>导入</button>
         <button onClick={() => console.log('导出模型')}>导出</button>
         <button 
@@ -55,6 +57,7 @@ const ModelManager = ({
             <thead>
               <tr>
                 <th>名称</th>
+                <th>Code</th>
                 <th>描述</th>
                 <th>创建人</th>
                 <th>更新时间</th>
@@ -65,6 +68,7 @@ const ModelManager = ({
               {paginatedModels.map(model => (
                 <tr key={model.id}>
                   <td>{model.name}</td>
+                  <td>{model.code}</td>
                   <td>{model.description}</td>
                   <td>{model.creator}</td>
                   <td>{model.updatedAt}</td>
@@ -87,6 +91,7 @@ const ModelManager = ({
               onDoubleClick={() => navigate(`/model/${model.id}`)}
             >
               <h3>{model.name}</h3>
+              <p>code: {model.code}</p>
               <p>描述: {model.description}</p>
               <p>创建人: {model.creator}</p>
               <p>更新时间: {model.updatedAt}</p>

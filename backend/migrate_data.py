@@ -16,21 +16,21 @@ mock_data = {
     "domain_edges": [],
     "models": [
         # 路网设施域核心模型
-        {"id": 1, "name": "路段业主", "description": "高速公路路段业主", "creator": "路段管理部", "updatedAt": "2025-12-22", "domainId": 3},
-        {"id": 2, "name": "收费公路", "description": "收费公路信息", "creator": "路段管理部", "updatedAt": "2025-12-22", "domainId": 3},
-        {"id": 3, "name": "收费站", "description": "收费站信息", "creator": "路段管理部", "updatedAt": "2025-12-22", "domainId": 3},
-        {"id": 4, "name": "ETC门架", "description": "ETC门架信息", "creator": "路段管理部", "updatedAt": "2025-12-22", "domainId": 3},
-        {"id": 5, "name": "收费单元", "description": "收费单元信息", "creator": "路段管理部", "updatedAt": "2025-12-22", "domainId": 3},
-        {"id": 6, "name": "车道", "description": "收费站车道信息", "creator": "路段管理部", "updatedAt": "2025-12-22", "domainId": 3},
-        {"id": 7, "name": "标识点", "description": "路径标识点", "creator": "路段管理部", "updatedAt": "2025-12-22", "domainId": 3},
+        {"id": 1, "name": "路段业主", "code": "road_owner", "description": "高速公路路段业主", "creator": "路段管理部", "updatedAt": "2025-12-22", "domainId": 3},
+        {"id": 2, "name": "收费公路", "code": "toll_road", "description": "收费公路信息", "creator": "路段管理部", "updatedAt": "2025-12-22", "domainId": 3},
+        {"id": 3, "name": "收费站", "code": "toll_station", "description": "收费站信息", "creator": "路段管理部", "updatedAt": "2025-12-22", "domainId": 3},
+        {"id": 4, "name": "ETC门架", "code": "etc_gantry", "description": "ETC门架信息", "creator": "路段管理部", "updatedAt": "2025-12-22", "domainId": 3},
+        {"id": 5, "name": "收费单元", "code": "toll_unit", "description": "收费单元信息", "creator": "路段管理部", "updatedAt": "2025-12-22", "domainId": 3},
+        {"id": 6, "name": "车道", "code": "lane", "description": "收费站车道信息", "creator": "路段管理部", "updatedAt": "2025-12-22", "domainId": 3},
+        {"id": 7, "name": "标识点", "code": "marker_point", "description": "路径标识点", "creator": "路段管理部", "updatedAt": "2025-12-22", "domainId": 3},
         
         # 关联模型（为了完整展示关系）
-        {"id": 8, "name": "车辆", "description": "车辆基本信息", "creator": "车辆管理部", "updatedAt": "2025-12-22", "domainId": 3},
-        {"id": 9, "name": "通行介质", "description": "车辆通行介质", "creator": "车辆管理部", "updatedAt": "2025-12-22", "domainId": 3},
-        {"id": 10, "name": "交易流水", "description": "车辆交易流水记录", "creator": "收费管理部", "updatedAt": "2025-12-22", "domainId": 3},
-        {"id": 11, "name": "车辆通行路径", "description": "车辆实际通行路径", "creator": "路径管理部", "updatedAt": "2025-12-22", "domainId": 3},
-        {"id": 12, "name": "通行拟合路径", "description": "拟合后的通行路径", "creator": "路径管理部", "updatedAt": "2025-12-22", "domainId": 3},
-        {"id": 13, "name": "拆分明细", "description": "交易拆分详情", "creator": "收费管理部", "updatedAt": "2025-12-22", "domainId": 3}
+        {"id": 8, "name": "车辆", "code": "vehicle", "description": "车辆基本信息", "creator": "车辆管理部", "updatedAt": "2025-12-22", "domainId": 3},
+        {"id": 9, "name": "通行介质", "code": "pass_medium", "description": "车辆通行介质", "creator": "车辆管理部", "updatedAt": "2025-12-22", "domainId": 3},
+        {"id": 10, "name": "交易流水", "code": "transaction_record", "description": "车辆交易流水记录", "creator": "收费管理部", "updatedAt": "2025-12-22", "domainId": 3},
+        {"id": 11, "name": "车辆通行路径", "code": "vehicle_path", "description": "车辆实际通行路径", "creator": "路径管理部", "updatedAt": "2025-12-22", "domainId": 3},
+        {"id": 12, "name": "通行拟合路径", "code": "fitted_path", "description": "拟合后的通行路径", "creator": "路径管理部", "updatedAt": "2025-12-22", "domainId": 3},
+        {"id": 13, "name": "拆分明细", "code": "split_detail", "description": "交易拆分详情", "creator": "收费管理部", "updatedAt": "2025-12-22", "domainId": 3}
     ],
     "model_edges": [
         # 车辆 - 通行介质
@@ -66,60 +66,60 @@ mock_data = {
     ],
     "properties": [
         # 路段业主属性
-        {"id": 1, "name": "业主ID", "type": "string", "required": True, "description": "路段业主唯一标识", "modelId": 1, "isPrimaryKey": True, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "UNIQUE"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "owner_id"},
-        {"id": 2, "name": "业主名称", "type": "string", "required": True, "description": "路段业主名称", "modelId": 1, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "owner_name"},
-        {"id": 3, "name": "联系方式", "type": "string", "required": True, "description": "业主联系方式", "modelId": 1, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL"], "sensitivityLevel": "private", "maskRule": "phone_middle_4", "physicalColumn": "contact_info"},
+        {"id": 1, "name": "业主ID", "code": "owner_id", "type": "string", "required": True, "description": "路段业主唯一标识", "modelId": 1, "isPrimaryKey": True, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "UNIQUE"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "owner_id"},
+        {"id": 2, "name": "业主名称", "code": "owner_name", "type": "string", "required": True, "description": "路段业主名称", "modelId": 1, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "owner_name"},
+        {"id": 3, "name": "联系方式", "code": "contact_info", "type": "string", "required": True, "description": "业主联系方式", "modelId": 1, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL"], "sensitivityLevel": "private", "maskRule": "phone_middle_4", "physicalColumn": "contact_info"},
         
         # 收费公路属性
-        {"id": 4, "name": "公路ID", "type": "string", "required": True, "description": "收费公路唯一标识", "modelId": 2, "isPrimaryKey": True, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "UNIQUE"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "road_id"},
-        {"id": 5, "name": "公路名称", "type": "string", "required": True, "description": "收费公路名称", "modelId": 2, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "road_name"},
-        {"id": 6, "name": "所属业主", "type": "string", "required": True, "description": "所属路段业主ID", "modelId": 2, "isPrimaryKey": False, "isForeignKey": True, "defaultValue": None, "constraints": ["NOT NULL"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "owner_id", "foreignKeyTable": "owner", "foreignKeyColumn": "owner_id"},
-        {"id": 7, "name": "公路等级", "type": "string", "required": True, "description": "公路等级", "modelId": 2, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "IN(高速, 国道, 省道)"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "road_level"},
-        {"id": 8, "name": "起始里程", "type": "number", "required": True, "description": "起始里程", "modelId": 2, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "MIN(0)"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "start_mileage"},
-        {"id": 9, "name": "结束里程", "type": "number", "required": True, "description": "结束里程", "modelId": 2, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "MIN(0)"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "end_mileage"},
+        {"id": 4, "name": "公路ID", "code": "road_id", "type": "string", "required": True, "description": "收费公路唯一标识", "modelId": 2, "isPrimaryKey": True, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "UNIQUE"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "road_id"},
+        {"id": 5, "name": "公路名称", "code": "road_name", "type": "string", "required": True, "description": "收费公路名称", "modelId": 2, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "road_name"},
+        {"id": 6, "name": "所属业主", "code": "owner_id", "type": "string", "required": True, "description": "所属路段业主ID", "modelId": 2, "isPrimaryKey": False, "isForeignKey": True, "defaultValue": None, "constraints": ["NOT NULL"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "owner_id", "foreignKeyTable": "owner", "foreignKeyColumn": "owner_id"},
+        {"id": 7, "name": "公路等级", "code": "road_level", "type": "string", "required": True, "description": "公路等级", "modelId": 2, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "IN(高速, 国道, 省道)"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "road_level"},
+        {"id": 8, "name": "起始里程", "code": "start_mileage", "type": "number", "required": True, "description": "起始里程", "modelId": 2, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "MIN(0)"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "start_mileage"},
+        {"id": 9, "name": "结束里程", "code": "end_mileage", "type": "number", "required": True, "description": "结束里程", "modelId": 2, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "MIN(0)"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "end_mileage"},
         
         # 收费站属性
-        {"id": 10, "name": "收费站ID", "type": "string", "required": True, "description": "收费站唯一标识", "modelId": 3, "isPrimaryKey": True, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "UNIQUE"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "station_id"},
-        {"id": 11, "name": "收费站名称", "type": "string", "required": True, "description": "收费站名称", "modelId": 3, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "station_name"},
-        {"id": 12, "name": "所属公路", "type": "string", "required": True, "description": "所属收费公路ID", "modelId": 3, "isPrimaryKey": False, "isForeignKey": True, "defaultValue": None, "constraints": ["NOT NULL"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "road_id", "foreignKeyTable": "road", "foreignKeyColumn": "road_id"},
-        {"id": 13, "name": "收费站类型", "type": "string", "required": True, "description": "收费站类型", "modelId": 3, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "IN(主线站, 匝道站)"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "station_type"},
+        {"id": 10, "name": "收费站ID", "code": "station_id", "type": "string", "required": True, "description": "收费站唯一标识", "modelId": 3, "isPrimaryKey": True, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "UNIQUE"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "station_id"},
+        {"id": 11, "name": "收费站名称", "code": "station_name", "type": "string", "required": True, "description": "收费站名称", "modelId": 3, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "station_name"},
+        {"id": 12, "name": "所属公路", "code": "road_id", "type": "string", "required": True, "description": "所属收费公路ID", "modelId": 3, "isPrimaryKey": False, "isForeignKey": True, "defaultValue": None, "constraints": ["NOT NULL"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "road_id", "foreignKeyTable": "road", "foreignKeyColumn": "road_id"},
+        {"id": 13, "name": "收费站类型", "code": "station_type", "type": "string", "required": True, "description": "收费站类型", "modelId": 3, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "IN(主线站, 匝道站)"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "station_type"},
         
         # ETC门架属性
-        {"id": 14, "name": "门架ID", "type": "string", "required": True, "description": "ETC门架唯一标识", "modelId": 4, "isPrimaryKey": True, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "UNIQUE"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "gantry_id"},
-        {"id": 15, "name": "门架名称", "type": "string", "required": True, "description": "ETC门架名称", "modelId": 4, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "gantry_name"},
-        {"id": 16, "name": "所属公路", "type": "string", "required": True, "description": "所属收费公路ID", "modelId": 4, "isPrimaryKey": False, "isForeignKey": True, "defaultValue": None, "constraints": ["NOT NULL"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "road_id", "foreignKeyTable": "road", "foreignKeyColumn": "road_id"},
-        {"id": 17, "name": "门架位置", "type": "string", "required": True, "description": "门架位置", "modelId": 4, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "gantry_location"},
-        {"id": 18, "name": "门架状态", "type": "string", "required": True, "description": "门架运行状态", "modelId": 4, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": "正常", "constraints": ["IN(正常, 故障, 维护)"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "gantry_status"},
+        {"id": 14, "name": "门架ID", "code": "gantry_id", "type": "string", "required": True, "description": "ETC门架唯一标识", "modelId": 4, "isPrimaryKey": True, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "UNIQUE"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "gantry_id"},
+        {"id": 15, "name": "门架名称", "code": "gantry_name", "type": "string", "required": True, "description": "ETC门架名称", "modelId": 4, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "gantry_name"},
+        {"id": 16, "name": "所属公路", "code": "road_id", "type": "string", "required": True, "description": "所属收费公路ID", "modelId": 4, "isPrimaryKey": False, "isForeignKey": True, "defaultValue": None, "constraints": ["NOT NULL"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "road_id", "foreignKeyTable": "road", "foreignKeyColumn": "road_id"},
+        {"id": 17, "name": "门架位置", "code": "gantry_location", "type": "string", "required": True, "description": "门架位置", "modelId": 4, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "gantry_location"},
+        {"id": 18, "name": "门架状态", "code": "gantry_status", "type": "string", "required": True, "description": "门架运行状态", "modelId": 4, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": "正常", "constraints": ["IN(正常, 故障, 维护)"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "gantry_status"},
         
         # 收费单元属性
-        {"id": 19, "name": "收费单元ID", "type": "string", "required": True, "description": "收费单元唯一标识", "modelId": 5, "isPrimaryKey": True, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "UNIQUE"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "toll_unit_id"},
-        {"id": 20, "name": "收费单元名称", "type": "string", "required": True, "description": "收费单元名称", "modelId": 5, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "toll_unit_name"},
-        {"id": 21, "name": "所属公路", "type": "string", "required": True, "description": "所属收费公路ID", "modelId": 5, "isPrimaryKey": False, "isForeignKey": True, "defaultValue": None, "constraints": ["NOT NULL"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "road_id", "foreignKeyTable": "road", "foreignKeyColumn": "road_id"},
-        {"id": 22, "name": "收费类型", "type": "string", "required": True, "description": "收费类型", "modelId": 5, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "IN(ETC, 人工, 混合)"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "toll_type"},
+        {"id": 19, "name": "收费单元ID", "code": "toll_unit_id", "type": "string", "required": True, "description": "收费单元唯一标识", "modelId": 5, "isPrimaryKey": True, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "UNIQUE"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "toll_unit_id"},
+        {"id": 20, "name": "收费单元名称", "code": "toll_unit_name", "type": "string", "required": True, "description": "收费单元名称", "modelId": 5, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "toll_unit_name"},
+        {"id": 21, "name": "所属公路", "code": "road_id", "type": "string", "required": True, "description": "所属收费公路ID", "modelId": 5, "isPrimaryKey": False, "isForeignKey": True, "defaultValue": None, "constraints": ["NOT NULL"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "road_id", "foreignKeyTable": "road", "foreignKeyColumn": "road_id"},
+        {"id": 22, "name": "收费类型", "code": "toll_type", "type": "string", "required": True, "description": "收费类型", "modelId": 5, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "IN(ETC, 人工, 混合)"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "toll_type"},
         
         # 车道属性
-        {"id": 23, "name": "车道ID", "type": "string", "required": True, "description": "车道唯一标识", "modelId": 6, "isPrimaryKey": True, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "UNIQUE"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "lane_id"},
-        {"id": 24, "name": "车道编号", "type": "string", "required": True, "description": "车道编号", "modelId": 6, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "lane_number"},
-        {"id": 25, "name": "所属收费站", "type": "string", "required": True, "description": "所属收费站ID", "modelId": 6, "isPrimaryKey": False, "isForeignKey": True, "defaultValue": None, "constraints": ["NOT NULL"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "station_id", "foreignKeyTable": "toll_station", "foreignKeyColumn": "station_id"},
-        {"id": 26, "name": "车道类型", "type": "string", "required": True, "description": "车道类型（ETC、人工等）", "modelId": 6, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "IN(ETC, 人工, 混合)"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "lane_type"},
-        {"id": 27, "name": "车道状态", "type": "string", "required": True, "description": "车道运行状态", "modelId": 6, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": "正常", "constraints": ["IN(正常, 故障, 关闭)"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "lane_status"},
+        {"id": 23, "name": "车道ID", "code": "lane_id", "type": "string", "required": True, "description": "车道唯一标识", "modelId": 6, "isPrimaryKey": True, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "UNIQUE"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "lane_id"},
+        {"id": 24, "name": "车道编号", "code": "lane_number", "type": "string", "required": True, "description": "车道编号", "modelId": 6, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "lane_number"},
+        {"id": 25, "name": "所属收费站", "code": "station_id", "type": "string", "required": True, "description": "所属收费站ID", "modelId": 6, "isPrimaryKey": False, "isForeignKey": True, "defaultValue": None, "constraints": ["NOT NULL"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "station_id", "foreignKeyTable": "toll_station", "foreignKeyColumn": "station_id"},
+        {"id": 26, "name": "车道类型", "code": "lane_type", "type": "string", "required": True, "description": "车道类型（ETC、人工等）", "modelId": 6, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "IN(ETC, 人工, 混合)"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "lane_type"},
+        {"id": 27, "name": "车道状态", "code": "lane_status", "type": "string", "required": True, "description": "车道运行状态", "modelId": 6, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": "正常", "constraints": ["IN(正常, 故障, 关闭)"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "lane_status"},
         
         # 标识点属性
-        {"id": 28, "name": "标识点ID", "type": "string", "required": True, "description": "标识点唯一标识", "modelId": 7, "isPrimaryKey": True, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "UNIQUE"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "marker_id"},
-        {"id": 29, "name": "标识点名称", "type": "string", "required": True, "description": "标识点名称", "modelId": 7, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "marker_name"},
-        {"id": 30, "name": "经度", "type": "number", "required": True, "description": "标识点经度", "modelId": 7, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "BETWEEN(-180, 180)"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "longitude"},
-        {"id": 31, "name": "纬度", "type": "number", "required": True, "description": "标识点纬度", "modelId": 7, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "BETWEEN(-90, 90)"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "latitude"},
-        {"id": 32, "name": "标识点类型", "type": "string", "required": True, "description": "标识点类型", "modelId": 7, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "IN(入口, 出口, 中间点)"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "marker_type"},
+        {"id": 28, "name": "标识点ID", "code": "marker_id", "type": "string", "required": True, "description": "标识点唯一标识", "modelId": 7, "isPrimaryKey": True, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "UNIQUE"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "marker_id"},
+        {"id": 29, "name": "标识点名称", "code": "marker_name", "type": "string", "required": True, "description": "标识点名称", "modelId": 7, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "marker_name"},
+        {"id": 30, "name": "经度", "code": "longitude", "type": "number", "required": True, "description": "标识点经度", "modelId": 7, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "BETWEEN(-180, 180)"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "longitude"},
+        {"id": 31, "name": "纬度", "code": "latitude", "type": "number", "required": True, "description": "标识点纬度", "modelId": 7, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "BETWEEN(-90, 90)"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "latitude"},
+        {"id": 32, "name": "标识点类型", "code": "marker_type", "type": "string", "required": True, "description": "标识点类型", "modelId": 7, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "IN(入口, 出口, 中间点)"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "marker_type"},
         
         # 车辆属性
-        {"id": 33, "name": "车辆ID", "type": "string", "required": True, "description": "车辆唯一标识", "modelId": 8, "isPrimaryKey": True, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "UNIQUE"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "vehicle_id"},
-        {"id": 34, "name": "车牌号", "type": "string", "required": True, "description": "车辆牌照号码", "modelId": 8, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "UNIQUE"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "license_plate"},
-        {"id": 35, "name": "车型", "type": "string", "required": True, "description": "车辆类型", "modelId": 8, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "IN(小型客车, 大型客车, 小型货车, 大型货车, 中型客车)"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "vehicle_type"},
-        {"id": 36, "name": "车主姓名", "type": "string", "required": True, "description": "车辆所有人姓名", "modelId": 8, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL"], "sensitivityLevel": "private", "maskRule": "name_last_char", "physicalColumn": "owner_name"},
-        {"id": 37, "name": "车主身份证号", "type": "string", "required": False, "description": "车主身份证号码", "modelId": 8, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["LENGTH(18)"], "sensitivityLevel": "private", "maskRule": "id_card_middle_8", "physicalColumn": "owner_id_card"},
-        {"id": 38, "name": "车辆颜色", "type": "string", "required": False, "description": "车辆颜色", "modelId": 8, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": [], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "vehicle_color"},
-        {"id": 39, "name": "注册日期", "type": "date", "required": False, "description": "车辆注册日期", "modelId": 8, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": [], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "register_date"},
-        {"id": 40, "name": "车辆状态", "type": "string", "required": True, "description": "车辆状态", "modelId": 8, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": "正常", "constraints": ["IN(正常, 注销, 报废, 查封)"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "vehicle_status"}
+        {"id": 33, "name": "车辆ID", "code": "vehicle_id", "type": "string", "required": True, "description": "车辆唯一标识", "modelId": 8, "isPrimaryKey": True, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "UNIQUE"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "vehicle_id"},
+        {"id": 34, "name": "车牌号", "code": "license_plate", "type": "string", "required": True, "description": "车辆牌照号码", "modelId": 8, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "UNIQUE"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "license_plate"},
+        {"id": 35, "name": "车型", "code": "vehicle_type", "type": "string", "required": True, "description": "车辆类型", "modelId": 8, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL", "IN(小型客车, 大型客车, 小型货车, 大型货车, 中型客车)"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "vehicle_type"},
+        {"id": 36, "name": "车主姓名", "code": "owner_name", "type": "string", "required": True, "description": "车辆所有人姓名", "modelId": 8, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["NOT NULL"], "sensitivityLevel": "private", "maskRule": "name_last_char", "physicalColumn": "owner_name"},
+        {"id": 37, "name": "车主身份证号", "code": "owner_id_card", "type": "string", "required": False, "description": "车主身份证号码", "modelId": 8, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": ["LENGTH(18)"], "sensitivityLevel": "private", "maskRule": "id_card_middle_8", "physicalColumn": "owner_id_card"},
+        {"id": 38, "name": "车辆颜色", "code": "vehicle_color", "type": "string", "required": False, "description": "车辆颜色", "modelId": 8, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": [], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "vehicle_color"},
+        {"id": 39, "name": "注册日期", "code": "register_date", "type": "date", "required": False, "description": "车辆注册日期", "modelId": 8, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": None, "constraints": [], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "register_date"},
+        {"id": 40, "name": "车辆状态", "code": "vehicle_status", "type": "string", "required": True, "description": "车辆状态", "modelId": 8, "isPrimaryKey": False, "isForeignKey": False, "defaultValue": "正常", "constraints": ["IN(正常, 注销, 报废, 查封)"], "sensitivityLevel": "public", "maskRule": None, "physicalColumn": "vehicle_status"}
     ],
     # 关系数据 - 使用sourceModelId和targetModelId实现规范化
     "relations": [
@@ -482,6 +482,7 @@ def create_tables(conn):
     CREATE TABLE IF NOT EXISTS models (
         id INTEGER PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
+        code VARCHAR(100) NOT NULL,
         description TEXT,
         creator VARCHAR(100),
         updatedAt DATE,
@@ -504,6 +505,7 @@ def create_tables(conn):
     CREATE TABLE IF NOT EXISTS properties (
         id INTEGER PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
+        code VARCHAR(100) NOT NULL,
         type VARCHAR(50) NOT NULL,
         required BOOLEAN,
         description TEXT,
@@ -576,6 +578,8 @@ def create_tables(conn):
         name VARCHAR(100) NOT NULL,
         type VARCHAR(50) NOT NULL,
         url TEXT NOT NULL,
+        username VARCHAR(100),
+        password VARCHAR(100),
         tableName VARCHAR(100),
         status VARCHAR(50),
         description TEXT,
@@ -673,8 +677,8 @@ def insert_data(conn, data):
     # 插入模型数据
     for model in data["models"]:
         conn.execute(
-            "INSERT INTO models (id, name, description, creator, updatedAt, domainId) VALUES (?, ?, ?, ?, ?, ?)",
-            (model["id"], model["name"], model["description"], model["creator"], model["updatedAt"], model["domainId"])
+            "INSERT INTO models (id, name, code, description, creator, updatedAt, domainId) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (model["id"], model["name"], model["code"], model["description"], model["creator"], model["updatedAt"], model["domainId"])
         )
     print("插入模型数据完成")
     
@@ -689,9 +693,9 @@ def insert_data(conn, data):
     # 插入属性数据
     for prop in data["properties"]:
         conn.execute(
-            "INSERT INTO properties (id, name, type, required, description, modelId, isPrimaryKey, isForeignKey, defaultValue, constraints, sensitivityLevel, maskRule, physicalColumn, foreignKeyTable, foreignKeyColumn) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO properties (id, name, code, type, required, description, modelId, isPrimaryKey, isForeignKey, defaultValue, constraints, sensitivityLevel, maskRule, physicalColumn, foreignKeyTable, foreignKeyColumn) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
-                prop["id"], prop["name"], prop["type"], prop["required"], prop["description"],
+                prop["id"], prop["name"], prop["code"], prop["type"], prop["required"], prop["description"],
                 prop["modelId"], prop["isPrimaryKey"], prop["isForeignKey"], str(prop["defaultValue"]),
                 json.dumps(prop["constraints"]), prop["sensitivityLevel"], prop["maskRule"],
                 prop["physicalColumn"], prop.get("foreignKeyTable"), prop.get("foreignKeyColumn")
@@ -737,9 +741,11 @@ def insert_data(conn, data):
     for datasource in data["datasources"]:
         # 添加domainId字段，默认为3（路网设施域）
         conn.execute(
-            "INSERT INTO datasources (id, name, type, url, tableName, status, description, modelId, domainId, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO datasources (id, name, type, url, username, password, tableName, status, description, modelId, domainId, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 datasource["id"], datasource["name"], datasource["type"], datasource["url"],
+                datasource.get("username", "root"), # 默认值root
+                datasource.get("password", "password"), # 默认值password
                 datasource["tableName"], datasource["status"], datasource["description"], datasource["modelId"],
                 3, # 默认为路网设施域
                 datasource["createdAt"], datasource["updatedAt"]
@@ -790,13 +796,19 @@ def main():
         # 创建表
         create_tables(conn)
         
+        # 清空现有数据（处理主键冲突问题）
+        tables_to_clear = ['action_types', 'functions', 'model_indicators', 'indicators', 'shared_attributes', 'relations', 'properties', 'model_edges', 'datasources', 'models', 'domain_edges', 'domains']
+        for table in tables_to_clear:
+            conn.execute(f"DELETE FROM {table} WHERE 1=1")
+        print("\n已清空现有数据")
+        
         # 插入数据
         insert_data(conn, mock_data)
         
         print("\n演示数据迁移完成！")
     except Exception as e:
         print(f"\n数据迁移失败: {e}")
-        conn.rollback()
+        # 移除rollback调用，因为DuckDB默认不开启事务
     finally:
         # 关闭连接
         conn.close()

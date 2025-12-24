@@ -39,6 +39,7 @@ const PropertyManager = ({
         setEditingProperty(null);
         setNewProperty({ 
           name: '', 
+          code: '',
           type: 'string', 
           required: false, 
           description: '', 
@@ -79,6 +80,7 @@ const PropertyManager = ({
         setEditingProperty(null);
         setNewProperty({ 
           name: '', 
+          code: '',
           type: 'string', 
           required: false, 
           description: '', 
@@ -231,6 +233,7 @@ const PropertyManager = ({
                   />
                 </th>
                 <th>名称</th>
+                <th>Code</th>
                 <th>类型</th>
                 <th>必填</th>
                 <th>主键</th>
@@ -251,6 +254,7 @@ const PropertyManager = ({
                     />
                   </td>
                   <td>{property.name}</td>
+                  <td>{property.code}</td>
                   <td>{property.type}</td>
                   <td>{property.required ? '是' : '否'}</td>
                   <td>{property.isPrimaryKey ? '是' : '否'}</td>
@@ -277,6 +281,7 @@ const PropertyManager = ({
           {paginatedProperties.map(property => (
             <div key={property.id} className="card">
               <h3>{property.name}</h3>
+              <p><strong>Code:</strong> {property.code}</p>
               <p><strong>类型:</strong> {property.type}</p>
               <p><strong>必填:</strong> {property.required ? '是' : '否'}</p>
               <p><strong>主键:</strong> {property.isPrimaryKey ? '是' : '否'}</p>
