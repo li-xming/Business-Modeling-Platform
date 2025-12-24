@@ -81,7 +81,7 @@ const DatasourceManager = ({
                       className="test" 
                       onClick={() => handleTestDatasourceConnection(datasource)}
                     >
-                      连通性测试
+                      测试
                     </button>
                     <button 
                       className={`toggle ${datasource.status === 'active' ? 'inactive' : 'active'}`} 
