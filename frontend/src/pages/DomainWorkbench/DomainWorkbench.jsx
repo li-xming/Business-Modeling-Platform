@@ -892,7 +892,7 @@ const DomainWorkbench = () => {
             className={activeTab === 'datasource-mgr' ? 'active' : ''}
             onClick={() => setActiveTab('datasource-mgr')}
           >
-            绑定数据源管理
+            数据源管理
           </button>
       </div>
 
