@@ -216,6 +216,264 @@ mock_data = {
     "model_indicators": [
         {"modelId": 10, "indicatorId": 1},
         {"modelId": 3, "indicatorId": 4}
+    ],
+    
+    # 函数数据
+    "functions": [
+        {
+            "id": 1,
+            "name": "createCard",
+            "description": "创建新的卡片",
+            "code": "function createCard(data) { return { id: Date.now(), ...data, status: 'active' }; }",
+            "inputSchema": {"type": "object", "properties": {"cardNo": {"type": "string"}, "holderName": {"type": "string"}}},
+            "returnType": "object",
+            "version": "1.0.0",
+            "metadata": {"author": "admin", "createdAt": "2025-12-22"},
+            "domainId": 3,
+            "createdAt": "2025-12-22",
+            "updatedAt": "2025-12-22"
+        },
+        {
+            "id": 2,
+            "name": "rechargeCard",
+            "description": "为卡片充值",
+            "code": "function rechargeCard(data) { return { id: data.id, balance: (data.balance || 0) + data.amount }; }",
+            "inputSchema": {"type": "object", "properties": {"id": {"type": "string"}, "amount": {"type": "number"}}},
+            "returnType": "object",
+            "version": "1.0.0",
+            "metadata": {"author": "admin", "createdAt": "2025-12-22"},
+            "domainId": 3,
+            "createdAt": "2025-12-22",
+            "updatedAt": "2025-12-22"
+        },
+        {
+            "id": 3,
+            "name": "reportCardLost",
+            "description": "挂失卡片",
+            "code": "function reportCardLost(data) { return { id: data.id, status: 'lost', lostAt: new Date().toISOString() }; }",
+            "inputSchema": {"type": "object", "properties": {"id": {"type": "string"}}},
+            "returnType": "object",
+            "version": "1.0.0",
+            "metadata": {"author": "admin", "createdAt": "2025-12-22"},
+            "domainId": 3,
+            "createdAt": "2025-12-22",
+            "updatedAt": "2025-12-22"
+        },
+        {
+            "id": 4,
+            "name": "syncBlacklist",
+            "description": "同步黑名单",
+            "code": "function syncBlacklist(data) { return { success: true, count: data.ids.length, syncedAt: new Date().toISOString() }; }",
+            "inputSchema": {"type": "object", "properties": {"ids": {"type": "array", "items": {"type": "string"}}}},
+            "returnType": "object",
+            "version": "1.0.0",
+            "metadata": {"author": "admin", "createdAt": "2025-12-22"},
+            "domainId": 3,
+            "createdAt": "2025-12-22",
+            "updatedAt": "2025-12-22"
+        },
+        {
+            "id": 5,
+            "name": "generateTransaction",
+            "description": "生成交易记录",
+            "code": "function generateTransaction(data) { return { id: Date.now(), ...data, timestamp: new Date().toISOString(), status: 'completed' }; }",
+            "inputSchema": {"type": "object", "properties": {"vehicleId": {"type": "string"}, "cardId": {"type": "string"}, "amount": {"type": "number"}, "startMarkerId": {"type": "string"}, "endMarkerId": {"type": "string"}}},
+            "returnType": "object",
+            "version": "1.0.0",
+            "metadata": {"author": "admin", "createdAt": "2025-12-22"},
+            "domainId": 3,
+            "createdAt": "2025-12-22",
+            "updatedAt": "2025-12-22"
+        },
+        {
+            "id": 6,
+            "name": "generateVehiclePath",
+            "description": "生成车辆通行路径",
+            "code": "function generateVehiclePath(data) { return { id: Date.now(), ...data, generatedAt: new Date().toISOString() }; }",
+            "inputSchema": {"type": "object", "properties": {"vehicleId": {"type": "string"}, "transactionIds": {"type": "array", "items": {"type": "string"}}}},
+            "returnType": "object",
+            "version": "1.0.0",
+            "metadata": {"author": "admin", "createdAt": "2025-12-22"},
+            "domainId": 3,
+            "createdAt": "2025-12-22",
+            "updatedAt": "2025-12-22"
+        },
+        {
+            "id": 7,
+            "name": "generateFittedPath",
+            "description": "生成通行拟合路径",
+            "code": "function generateFittedPath(data) { return { id: Date.now(), ...data, fittedAt: new Date().toISOString() }; }",
+            "inputSchema": {"type": "object", "properties": {"vehiclePathId": {"type": "string"}}},
+            "returnType": "object",
+            "version": "1.0.0",
+            "metadata": {"author": "admin", "createdAt": "2025-12-22"},
+            "domainId": 3,
+            "createdAt": "2025-12-22",
+            "updatedAt": "2025-12-22"
+        },
+        {
+            "id": 8,
+            "name": "generateSplitDetails",
+            "description": "生成拆分明细",
+            "code": "function generateSplitDetails(data) { return { id: Date.now(), ...data, splitAt: new Date().toISOString() }; }",
+            "inputSchema": {"type": "object", "properties": {"fittedPathId": {"type": "string"}}},
+            "returnType": "object",
+            "version": "1.0.0",
+            "metadata": {"author": "admin", "createdAt": "2025-12-22"},
+            "domainId": 3,
+            "createdAt": "2025-12-22",
+            "updatedAt": "2025-12-22"
+        },
+        {
+            "id": 9,
+            "name": "registerVehicle",
+            "description": "注册车辆信息",
+            "code": "function registerVehicle(data) { return { id: Date.now(), ...data, status: 'active' }; }",
+            "inputSchema": {"type": "object", "properties": {"licensePlate": {"type": "string"}, "vehicleType": {"type": "string"}, "ownerName": {"type": "string"}}},
+            "returnType": "object",
+            "version": "1.0.0",
+            "metadata": {"author": "admin", "createdAt": "2025-12-22"},
+            "domainId": 3,
+            "createdAt": "2025-12-22",
+            "updatedAt": "2025-12-22"
+        },
+        {
+            "id": 10,
+            "name": "updateVehicleInfo",
+            "description": "更新车辆信息",
+            "code": "function updateVehicleInfo(data) { return { ...data, updatedAt: new Date().toISOString() }; }",
+            "inputSchema": {"type": "object", "properties": {"id": {"type": "string"}, "licensePlate": {"type": "string"}, "vehicleType": {"type": "string"}, "ownerName": {"type": "string"}}},
+            "returnType": "object",
+            "version": "1.0.0",
+            "metadata": {"author": "admin", "createdAt": "2025-12-22"},
+            "domainId": 3,
+            "createdAt": "2025-12-22",
+            "updatedAt": "2025-12-22"
+        }
+    ],
+    
+    # 操作类型数据
+    "action_types": [
+        {
+            "id": 1,
+            "name": "发卡",
+            "description": "创建新的卡片实例",
+            "targetObjectTypeId": 9,  # 通行介质
+            "inputSchema": {"type": "object", "properties": {"cardNo": {"type": "string"}, "holderName": {"type": "string"}}},
+            "outputSchema": {"type": "object", "properties": {"id": {"type": "string"}, "cardNo": {"type": "string"}, "status": {"type": "string"}}},
+            "requiresApproval": False,
+            "handlerFunction": "createCard",
+            "createdAt": "2025-12-22",
+            "updatedAt": "2025-12-22"
+        },
+        {
+            "id": 2,
+            "name": "充值",
+            "description": "为卡片充值",
+            "targetObjectTypeId": 9,  # 通行介质
+            "inputSchema": {"type": "object", "properties": {"id": {"type": "string"}, "amount": {"type": "number"}}},
+            "outputSchema": {"type": "object", "properties": {"id": {"type": "string"}, "balance": {"type": "number"}}},
+            "requiresApproval": False,
+            "handlerFunction": "rechargeCard",
+            "createdAt": "2025-12-22",
+            "updatedAt": "2025-12-22"
+        },
+        {
+            "id": 3,
+            "name": "挂失",
+            "description": "挂失卡片",
+            "targetObjectTypeId": 9,  # 通行介质
+            "inputSchema": {"type": "object", "properties": {"id": {"type": "string"}}},
+            "outputSchema": {"type": "object", "properties": {"id": {"type": "string"}, "status": {"type": "string"}, "lostAt": {"type": "string"}}},
+            "requiresApproval": False,
+            "handlerFunction": "reportCardLost",
+            "createdAt": "2025-12-22",
+            "updatedAt": "2025-12-22"
+        },
+        {
+            "id": 4,
+            "name": "黑名单同步",
+            "description": "同步黑名单信息",
+            "targetObjectTypeId": 9,  # 通行介质
+            "inputSchema": {"type": "object", "properties": {"ids": {"type": "array", "items": {"type": "string"}}}},
+            "outputSchema": {"type": "object", "properties": {"success": {"type": "boolean"}, "count": {"type": "number"}, "syncedAt": {"type": "string"}}},
+            "requiresApproval": False,
+            "handlerFunction": "syncBlacklist",
+            "createdAt": "2025-12-22",
+            "updatedAt": "2025-12-22"
+        },
+        {
+            "id": 5,
+            "name": "交易记录生成",
+            "description": "生成车辆交易记录",
+            "targetObjectTypeId": 10,  # 交易流水
+            "inputSchema": {"type": "object", "properties": {"vehicleId": {"type": "string"}, "cardId": {"type": "string"}, "amount": {"type": "number"}, "startMarkerId": {"type": "string"}, "endMarkerId": {"type": "string"}}},
+            "outputSchema": {"type": "object", "properties": {"id": {"type": "string"}, "vehicleId": {"type": "string"}, "cardId": {"type": "string"}, "amount": {"type": "number"}, "timestamp": {"type": "string"}, "status": {"type": "string"}}},
+            "requiresApproval": False,
+            "handlerFunction": "generateTransaction",
+            "createdAt": "2025-12-22",
+            "updatedAt": "2025-12-22"
+        },
+        {
+            "id": 6,
+            "name": "通行路径生成",
+            "description": "生成车辆通行路径",
+            "targetObjectTypeId": 11,  # 车辆通行路径
+            "inputSchema": {"type": "object", "properties": {"vehicleId": {"type": "string"}, "transactionIds": {"type": "array", "items": {"type": "string"}}}},
+            "outputSchema": {"type": "object", "properties": {"id": {"type": "string"}, "vehicleId": {"type": "string"}, "transactionIds": {"type": "array", "items": {"type": "string"}}, "generatedAt": {"type": "string"}}},
+            "requiresApproval": False,
+            "handlerFunction": "generateVehiclePath",
+            "createdAt": "2025-12-22",
+            "updatedAt": "2025-12-22"
+        },
+        {
+            "id": 7,
+            "name": "拟合路径生成",
+            "description": "生成通行拟合路径",
+            "targetObjectTypeId": 12,  # 通行拟合路径
+            "inputSchema": {"type": "object", "properties": {"vehiclePathId": {"type": "string"}}},
+            "outputSchema": {"type": "object", "properties": {"id": {"type": "string"}, "vehiclePathId": {"type": "string"}, "fittedAt": {"type": "string"}}},
+            "requiresApproval": False,
+            "handlerFunction": "generateFittedPath",
+            "createdAt": "2025-12-22",
+            "updatedAt": "2025-12-22"
+        },
+        {
+            "id": 8,
+            "name": "拆分明细生成",
+            "description": "生成拆分明细",
+            "targetObjectTypeId": 13,  # 拆分明细
+            "inputSchema": {"type": "object", "properties": {"fittedPathId": {"type": "string"}}},
+            "outputSchema": {"type": "object", "properties": {"id": {"type": "string"}, "fittedPathId": {"type": "string"}, "splitAt": {"type": "string"}}},
+            "requiresApproval": False,
+            "handlerFunction": "generateSplitDetails",
+            "createdAt": "2025-12-22",
+            "updatedAt": "2025-12-22"
+        },
+        {
+            "id": 9,
+            "name": "车辆注册",
+            "description": "注册车辆信息",
+            "targetObjectTypeId": 8,  # 车辆
+            "inputSchema": {"type": "object", "properties": {"licensePlate": {"type": "string"}, "vehicleType": {"type": "string"}, "ownerName": {"type": "string"}}},
+            "outputSchema": {"type": "object", "properties": {"id": {"type": "string"}, "licensePlate": {"type": "string"}, "vehicleType": {"type": "string"}, "ownerName": {"type": "string"}, "status": {"type": "string"}}},
+            "requiresApproval": False,
+            "handlerFunction": "registerVehicle",
+            "createdAt": "2025-12-22",
+            "updatedAt": "2025-12-22"
+        },
+        {
+            "id": 10,
+            "name": "车辆信息更新",
+            "description": "更新车辆信息",
+            "targetObjectTypeId": 8,  # 车辆
+            "inputSchema": {"type": "object", "properties": {"id": {"type": "string"}, "licensePlate": {"type": "string"}, "vehicleType": {"type": "string"}, "ownerName": {"type": "string"}}},
+            "outputSchema": {"type": "object", "properties": {"id": {"type": "string"}, "licensePlate": {"type": "string"}, "vehicleType": {"type": "string"}, "ownerName": {"type": "string"}, "updatedAt": {"type": "string"}}},
+            "requiresApproval": False,
+            "handlerFunction": "updateVehicleInfo",
+            "createdAt": "2025-12-22",
+            "updatedAt": "2025-12-22"
+        }
     ]
 }
 
@@ -728,6 +986,149 @@ def toggle_datasource(id):
             datasource["updatedAt"] = get_current_date()
             return jsonify(datasource)
     return jsonify({"error": "Datasource not found"}), 404
+
+# 函数管理相关接口
+@app.route('/api/function', methods=['GET'])
+def get_functions():
+    """获取函数列表"""
+    domain_id = request.args.get('domainId')
+    if domain_id:
+        return jsonify([f for f in mock_data["functions"] if f["domainId"] == int(domain_id)])
+    return jsonify(mock_data["functions"])
+
+@app.route('/api/function', methods=['POST'])
+def create_function():
+    """新建函数"""
+    data = request.get_json()
+    func = {
+        "id": get_next_id(mock_data["functions"]),
+        "name": data["name"],
+        "description": data.get("description", ""),
+        "code": data.get("code", ""),
+        "inputSchema": data.get("inputSchema", {}),
+        "returnType": data.get("returnType", "object"),
+        "version": data.get("version", "1.0.0"),
+        "metadata": data.get("metadata", {}),
+        "domainId": int(data.get("domainId", 3)),
+        "createdAt": get_current_date(),
+        "updatedAt": get_current_date()
+    }
+    mock_data["functions"].append(func)
+    return jsonify(func), 201
+
+@app.route('/api/function/<int:id>', methods=['PUT'])
+def update_function(id):
+    """更新函数"""
+    data = request.get_json()
+    for func in mock_data["functions"]:
+        if func["id"] == id:
+            func.update({
+                "name": data.get("name", func["name"]),
+                "description": data.get("description", func["description"]),
+                "code": data.get("code", func["code"]),
+                "inputSchema": data.get("inputSchema", func["inputSchema"]),
+                "returnType": data.get("returnType", func["returnType"]),
+                "version": data.get("version", func["version"]),
+                "metadata": data.get("metadata", func["metadata"]),
+                "updatedAt": get_current_date()
+            })
+            return jsonify(func)
+    return jsonify({"error": "Function not found"}), 404
+
+@app.route('/api/function/<int:id>', methods=['DELETE'])
+def delete_function(id):
+    """删除函数"""
+    # 检查是否有ActionType引用该函数
+    for action_type in mock_data["action_types"]:
+        if action_type["handlerFunction"] == next((f["name"] for f in mock_data["functions"] if f["id"] == id), None):
+            return jsonify({"error": "Cannot delete function, it is referenced by action type(s)"}), 400
+    
+    mock_data["functions"] = [f for f in mock_data["functions"] if f["id"] != id]
+    return jsonify({"message": "Function deleted", "success": True})
+
+# 操作类型相关接口
+@app.route('/api/action-type', methods=['GET'])
+def get_action_types():
+    """获取操作类型列表"""
+    target_object_type_id = request.args.get('targetObjectTypeId')
+    if target_object_type_id:
+        return jsonify([a for a in mock_data["action_types"] if a["targetObjectTypeId"] == int(target_object_type_id)])
+    return jsonify(mock_data["action_types"])
+
+@app.route('/api/action-type', methods=['POST'])
+def create_action_type():
+    """新建操作类型"""
+    data = request.get_json()
+    action_type = {
+        "id": get_next_id(mock_data["action_types"]),
+        "name": data["name"],
+        "description": data.get("description", ""),
+        "targetObjectTypeId": int(data["targetObjectTypeId"]),
+        "inputSchema": data.get("inputSchema", {}),
+        "outputSchema": data.get("outputSchema", {}),
+        "requiresApproval": data.get("requiresApproval", False),
+        "handlerFunction": data.get("handlerFunction", ""),
+        "createdAt": get_current_date(),
+        "updatedAt": get_current_date()
+    }
+    mock_data["action_types"].append(action_type)
+    return jsonify(action_type), 201
+
+@app.route('/api/action-type/<int:id>', methods=['PUT'])
+def update_action_type(id):
+    """更新操作类型"""
+    data = request.get_json()
+    for action_type in mock_data["action_types"]:
+        if action_type["id"] == id:
+            action_type.update({
+                "name": data.get("name", action_type["name"]),
+                "description": data.get("description", action_type["description"]),
+                "targetObjectTypeId": data.get("targetObjectTypeId", action_type["targetObjectTypeId"]),
+                "inputSchema": data.get("inputSchema", action_type["inputSchema"]),
+                "outputSchema": data.get("outputSchema", action_type["outputSchema"]),
+                "requiresApproval": data.get("requiresApproval", action_type["requiresApproval"]),
+                "handlerFunction": data.get("handlerFunction", action_type["handlerFunction"]),
+                "updatedAt": get_current_date()
+            })
+            return jsonify(action_type)
+    return jsonify({"error": "Action type not found"}), 404
+
+@app.route('/api/action-type/<int:id>', methods=['DELETE'])
+def delete_action_type(id):
+    """删除操作类型"""
+    mock_data["action_types"] = [a for a in mock_data["action_types"] if a["id"] != id]
+    return jsonify({"message": "Action type deleted", "success": True})
+
+# 执行操作接口
+@app.route('/api/action-type/<int:id>/execute', methods=['POST'])
+def execute_action_type(id):
+    """执行操作类型"""
+    data = request.get_json()
+    
+    # 查找操作类型
+    action_type = next((a for a in mock_data["action_types"] if a["id"] == id), None)
+    if not action_type:
+        return jsonify({"error": "Action type not found"}), 404
+    
+    # 查找对应的函数
+    func = next((f for f in mock_data["functions"] if f["name"] == action_type["handlerFunction"]), None)
+    if not func:
+        return jsonify({"error": "Handler function not found"}), 404
+    
+    # 这里可以添加实际的函数执行逻辑
+    # 目前只是返回模拟结果
+    result = {
+        "success": True,
+        "message": f"Executed action type: {action_type['name']}",
+        "data": {
+            "actionTypeId": id,
+            "actionName": action_type["name"],
+            "input": data,
+            "output": {"status": "completed"}
+        }
+    }
+    
+    return jsonify(result)
 
 # 属性更新接口
 @app.route('/api/property/<int:id>', methods=['PUT'])

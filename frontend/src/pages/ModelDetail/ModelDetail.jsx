@@ -16,6 +16,8 @@ import DatasourceManager from './modules/DatasourceManager';
 import DataManager from './modules/DataManager';
 import SemanticIndicatorManager from './modules/SemanticIndicatorManager';
 import ActionManager from './modules/ActionManager';
+import ApiManager from './modules/ApiManager';
+import FunctionManager from './modules/FunctionManager';
 import BloodlineAnalyzer from './modules/BloodlineAnalyzer';
 
 const ModelDetail = () => {
@@ -568,10 +570,22 @@ const ModelDetail = () => {
           血缘分析
         </button>
         <button
+          className={activeTab === 'api' ? 'active' : ''}
+          onClick={() => setActiveTab('api')}
+        >
+          API
+        </button>
+        <button
           className={activeTab === 'actions' ? 'active' : ''}
           onClick={() => setActiveTab('actions')}
         >
-          接口
+         动作
+        </button>
+        <button
+          className={activeTab === 'functions' ? 'active' : ''}
+          onClick={() => setActiveTab('functions')}
+        >
+          函数
         </button>
       </div>
 
@@ -686,11 +700,30 @@ const ModelDetail = () => {
           />
         )}
 
-        {/* 接口Tab */}
+        {/* API接口管理Tab */}
+        {activeTab === 'api' && (
+          <ApiManager 
+            modelId={modelId}
+            properties={properties}
+            showNotification={showNotification}
+            showConfirmDialog={showConfirmDialog}
+          />
+        )}
+
+        {/* 动作Tab */}
         {activeTab === 'actions' && (
           <ActionManager 
             modelId={modelId}
             properties={properties}
+            showNotification={showNotification}
+            showConfirmDialog={showConfirmDialog}
+          />
+        )}
+
+        {/* 函数管理Tab */}
+        {activeTab === 'functions' && (
+          <FunctionManager 
+            modelId={modelId}
             showNotification={showNotification}
             showConfirmDialog={showConfirmDialog}
           />
