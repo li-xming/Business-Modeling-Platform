@@ -669,6 +669,43 @@ def create_tables(conn):
     )
     """)
     
+    # 创建ETL任务表
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS etl_tasks (
+        id INTEGER PRIMARY KEY,
+        name VARCHAR(200) NOT NULL,
+        description TEXT,
+        sourceDatasourceId INTEGER NOT NULL,
+        targetModelId INTEGER NOT NULL,
+        status VARCHAR(50) DEFAULT 'inactive',
+        schedule VARCHAR(100),
+        config TEXT,
+        createdAt DATE,
+        updatedAt DATE,
+        lastRun DATE,
+        nextRun DATE,
+        FOREIGN KEY (sourceDatasourceId) REFERENCES datasources(id),
+        FOREIGN KEY (targetModelId) REFERENCES models(id)
+    )
+    """)
+    
+    # 创建ETL日志表
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS etl_logs (
+        id INTEGER PRIMARY KEY,
+        taskId INTEGER NOT NULL,
+        status VARCHAR(50) NOT NULL,
+        startTime DATE,
+        endTime DATE,
+        recordsProcessed INTEGER,
+        recordsSuccess INTEGER,
+        recordsFailed INTEGER,
+        errorMessage TEXT,
+        details TEXT,
+        FOREIGN KEY (taskId) REFERENCES etl_tasks(id)
+    )
+    """)
+    
     print("数据库表创建完成")
 
 def insert_data(conn, data):

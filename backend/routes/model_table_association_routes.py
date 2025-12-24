@@ -12,14 +12,28 @@ def get_model_table_associations():
         if model_id and model_id.strip():
             try:
                 model_id_int = int(model_id)
-                # 查询指定模型的表关联
-                associations = conn.execute("SELECT * FROM model_table_associations WHERE modelId = ?", (model_id_int,)).fetchall()
+                # 查询指定模型的关联表，包含数据源信息
+                associations = conn.execute(
+                    "SELECT a.*, d.name as datasourceName, d.type as datasourceType, d.url as datasourceUrl "
+                    "FROM model_table_associations a "
+                    "JOIN datasources d ON a.datasourceId = d.id "
+                    "WHERE a.modelId = ?", 
+                    (model_id_int,)
+                ).fetchall()
             except (ValueError, TypeError):
                 # 如果modelId不是有效整数，返回所有关联
-                associations = conn.execute("SELECT * FROM model_table_associations").fetchall()
+                associations = conn.execute(
+                    "SELECT a.*, d.name as datasourceName, d.type as datasourceType, d.url as datasourceUrl "
+                    "FROM model_table_associations a "
+                    "JOIN datasources d ON a.datasourceId = d.id "
+                ).fetchall()
         else:
             # 返回所有关联
-            associations = conn.execute("SELECT * FROM model_table_associations").fetchall()
+            associations = conn.execute(
+                "SELECT a.*, d.name as datasourceName, d.type as datasourceType, d.url as datasourceUrl "
+                "FROM model_table_associations a "
+                "JOIN datasources d ON a.datasourceId = d.id "
+            ).fetchall()
         
         # 转换为字典列表
         result = []
@@ -31,7 +45,10 @@ def get_model_table_associations():
                 "tableName": row[3],
                 "status": row[4],
                 "createdAt": row[5],
-                "updatedAt": row[6]
+                "updatedAt": row[6],
+                "datasourceName": row[7],
+                "datasourceType": row[8],
+                "datasourceUrl": row[9]
             })
         
         return jsonify(result)
@@ -86,6 +103,4 @@ def delete_model_table_association(id):
         # 删除关联
         conn.execute("DELETE FROM model_table_associations WHERE id = ?", (id,))
         conn.commit()
-        return jsonify({"message": "Model-table association deleted", "success": True})
-    finally:
-        conn.close()
+        return jsonify({"message": "Model-table association deleted", "succ

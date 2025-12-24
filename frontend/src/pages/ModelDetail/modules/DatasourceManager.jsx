@@ -112,7 +112,7 @@ const DatasourceManager = ({
       () => {
         // 使用关联ID删除，如果没有则使用数据源ID
         const deleteId = associationId || id;
-        const deleteUrl = associationId ? `/api/datasource/associations/${deleteId}` : `/api/datasource/${deleteId}`;
+        const deleteUrl = associationId ? `/api/model-table-associations/${deleteId}` : `/api/datasource/${deleteId}`;
         
         fetch(deleteUrl, { method: 'DELETE' })
           .then(() => {
@@ -438,8 +438,8 @@ const DatasourceManager = ({
                                       status: 'active'
                                     };
                                     
-                                    // 调用新的数据源关联API保存到数据库
-                                    fetch('/api/datasource/associations', {
+                                    // 调用数据源关联API保存到数据库
+                                    fetch('/api/model-table-associations', {
                                       method: 'POST',
                                       headers: { 'Content-Type': 'application/json' },
                                       body: JSON.stringify(newAssociation)

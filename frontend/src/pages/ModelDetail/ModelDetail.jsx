@@ -455,7 +455,7 @@ const ModelDetail = () => {
       .catch(error => console.error('Failed to fetch relation types:', error));
     
     // 获取模型-数据源表关联数据
-    fetch(`/api/datasource/associations?modelId=${modelId}`)
+    fetch(`/api/model-table-associations?modelId=${modelId}`)
       .then(response => {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
