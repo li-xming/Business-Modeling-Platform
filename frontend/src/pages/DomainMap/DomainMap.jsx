@@ -428,6 +428,7 @@ const DomainMap = () => {
       
       {/* 头部工具栏 */}
       <div className="header-toolbar">
+        <button onClick={() => navigate('/etl')}>ETL管理</button>
         <input
           type="text"
           placeholder="搜索域名称..."

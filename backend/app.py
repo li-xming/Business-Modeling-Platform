@@ -354,6 +354,73 @@ mock_data = {
     
     # 操作类型数据
     "action_types": [
+    ],
+    
+    # ETL任务数据
+    "etl_tasks": [
+        {
+            "id": 1,
+            "name": "收费站数据ETL",
+            "description": "从收费站数据源抽取数据，转换后加载到收费站模型",
+            "sourceDatasourceId": 3,  # 对应数据源ID
+            "targetModelId": 3,       # 对应模型ID
+            "status": "active",       # active, inactive, running
+            "schedule": "0 */1 * * *", # Cron表达式
+            "config": {
+                "extract": {
+                    "type": "table",  # table, query, file, api
+                    "sourceTable": "t_toll_station",
+                    "incremental": True,
+                    "incrementColumn": "update_time"
+                },
+                "transform": {
+                    "rules": [
+                        {
+                            "type": "dateFormat",
+                            "sourceColumn": "create_date",
+                            "targetFormat": "%Y-%m-%d %H:%M:%S"
+                        },
+                        {
+                            "type": "mask",
+                            "sourceColumn": "contact_info",
+                            "rule": "phone_middle_4"
+                        }
+                    ]
+                },
+                "load": {
+                    "mode": "upsert",  # insert, update, upsert, replace
+                    "batchSize": 1000,
+                    "validate": True
+                }
+            },
+            "createdAt": "2025-12-24",
+            "updatedAt": "2025-12-24",
+            "lastRun": "2025-12-24 10:30:00",
+            "nextRun": "2025-12-24 11:00:00"
+        }
+    ],
+    
+    # ETL执行日志
+    "etl_logs": [
+        {
+            "id": 1,
+            "taskId": 1,
+            "status": "success",  # success, failed, running
+            "startTime": "2025-12-24 10:30:00",
+            "endTime": "2025-12-24 10:32:00",
+            "recordsProcessed": 1500,
+            "recordsSuccess": 1480,
+            "recordsFailed": 20,
+            "errorMessage": None,
+            "details": {
+                "extract": {"duration": 120, "records": 1500},
+                "transform": {"duration": 45, "records": 1500},
+                "load": {"duration": 180, "records": 1480}
+            }
+        }
+    ],
+    
+    "action_types": [
         {
             "id": 1,
             "name": "发卡",
@@ -1301,6 +1368,152 @@ def delete_data_record(id):
     """删除数据记录"""
     # 模拟删除数据记录，实际项目中应该从数据库删除
     return jsonify({"message": "Data record deleted"})
+
+# ETL相关接口
+@app.route('/api/etl/tasks', methods=['GET'])
+def get_etl_tasks():
+    """获取ETL任务列表"""
+    return jsonify(mock_data["etl_tasks"])
+
+@app.route('/api/etl/tasks', methods=['POST'])
+def create_etl_task():
+    """创建ETL任务"""
+    data = request.get_json()
+    task = {
+        "id": get_next_id(mock_data["etl_tasks"]),
+        "name": data["name"],
+        "description": data.get("description", ""),
+        "sourceDatasourceId": data["sourceDatasourceId"],
+        "targetModelId": data["targetModelId"],
+        "status": data.get("status", "inactive"),
+        "schedule": data.get("schedule", ""),
+        "config": data.get("config", {
+            "extract": {"type": "table", "incremental": True},
+            "transform": {"rules": []},
+            "load": {"mode": "upsert", "batchSize": 1000}
+        }),
+        "createdAt": get_current_date(),
+        "updatedAt": get_current_date(),
+        "lastRun": None,
+        "nextRun": None
+    }
+    mock_data["etl_tasks"].append(task)
+    return jsonify(task), 201
+
+@app.route('/api/etl/tasks/<int:id>', methods=['GET'])
+def get_etl_task(id):
+    """获取单个ETL任务"""
+    task = next((t for t in mock_data["etl_tasks"] if t["id"] == id), None)
+    if task:
+        return jsonify(task)
+    return jsonify({"error": "ETL task not found"}), 404
+
+@app.route('/api/etl/tasks/<int:id>', methods=['PUT'])
+def update_etl_task(id):
+    """更新ETL任务"""
+    data = request.get_json()
+    for task in mock_data["etl_tasks"]:
+        if task["id"] == id:
+            task.update({
+                "name": data.get("name", task["name"]),
+                "description": data.get("description", task["description"]),
+                "sourceDatasourceId": data.get("sourceDatasourceId", task["sourceDatasourceId"]),
+                "targetModelId": data.get("targetModelId", task["targetModelId"]),
+                "status": data.get("status", task["status"]),
+                "schedule": data.get("schedule", task["schedule"]),
+                "config": data.get("config", task["config"]),
+                "updatedAt": get_current_date()
+            })
+            return jsonify(task)
+    return jsonify({"error": "ETL task not found"}), 404
+
+@app.route('/api/etl/tasks/<int:id>', methods=['DELETE'])
+def delete_etl_task(id):
+    """删除ETL任务"""
+    mock_data["etl_tasks"] = [t for t in mock_data["etl_tasks"] if t["id"] != id]
+    # 同时删除相关的日志
+    mock_data["etl_logs"] = [l for l in mock_data["etl_logs"] if l["taskId"] != id]
+    return jsonify({"message": "ETL task deleted", "success": True})
+
+@app.route('/api/etl/tasks/<int:id>/toggle', methods=['PUT'])
+def toggle_etl_task(id):
+    """启用/禁用ETL任务"""
+    for task in mock_data["etl_tasks"]:
+        if task["id"] == id:
+            task["status"] = "active" if task["status"] != "active" else "inactive"
+            task["updatedAt"] = get_current_date()
+            return jsonify(task)
+    return jsonify({"error": "ETL task not found"}), 404
+
+@app.route('/api/etl/tasks/<int:id>/execute', methods=['POST'])
+def execute_etl_task(id):
+    """执行ETL任务"""
+    task = next((t for t in mock_data["etl_tasks"] if t["id"] == id), None)
+    if not task:
+        return jsonify({"error": "ETL task not found"}), 404
+    
+    # 模拟ETL执行过程
+    import time
+    start_time = datetime.now()
+    
+    # 这里应该实际执行ETL逻辑，这里只是模拟
+    # 1. 抽取数据
+    time.sleep(0.1)  # 模拟抽取时间
+    records_extracted = 100  # 模拟抽取的记录数
+    
+    # 2. 转换数据
+    time.sleep(0.05)  # 模拟转换时间
+    records_transformed = records_extracted  # 模拟转换后的记录数
+    
+    # 3. 加载数据
+    time.sleep(0.1)  # 模拟加载时间
+    records_loaded = records_transformed - 2  # 模拟加载成功记录数（有2条失败）
+    
+    end_time = datetime.now()
+    
+    # 记录执行日志
+    log = {
+        "id": get_next_id(mock_data["etl_logs"]),
+        "taskId": id,
+        "status": "success" if records_loaded > 0 else "failed",
+        "startTime": start_time.strftime("%Y-%m-%d %H:%M:%S"),
+        "endTime": end_time.strftime("%Y-%m-%d %H:%M:%S"),
+        "recordsProcessed": records_extracted,
+        "recordsSuccess": records_loaded,
+        "recordsFailed": records_extracted - records_loaded,
+        "errorMessage": None if records_loaded > 0 else "Some records failed to load",
+        "details": {
+            "extract": {"duration": 0.1, "records": records_extracted},
+            "transform": {"duration": 0.05, "records": records_transformed},
+            "load": {"duration": 0.1, "records": records_loaded}
+        }
+    }
+    mock_data["etl_logs"].append(log)
+    
+    # 更新任务的最后运行时间
+    task["lastRun"] = start_time.strftime("%Y-%m-%d %H:%M:%S")
+    next_run = datetime.now().replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+    task["nextRun"] = next_run.strftime("%Y-%m-%d %H:%M:%S")
+    
+    return jsonify({
+        "message": "ETL task executed successfully",
+        "log": log
+    })
+
+@app.route('/api/etl/logs', methods=['GET'])
+def get_etl_logs():
+    """获取ETL执行日志"""
+    task_id = request.args.get('taskId')
+    if task_id:
+        return jsonify([l for l in mock_data["etl_logs"] if l["taskId"] == int(task_id)])
+    return jsonify(mock_data["etl_logs"])
+
+@app.route('/api/etl/logs/<int:id>', methods=['DELETE'])
+def delete_etl_log(id):
+    """删除ETL执行日志"""
+    mock_data["etl_logs"] = [l for l in mock_data["etl_logs"] if l["id"] != id]
+    return jsonify({"message": "ETL log deleted", "success": True})
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

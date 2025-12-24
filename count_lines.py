@@ -20,10 +20,10 @@ def is_source_file(file_path):
     }
     return file_path.suffix.lower() in source_extensions
 
-def print_tree(directory, prefix="", is_last=True, stats=None):
+def print_tree(directory, prefix="", is_last=True, stats=None, threshold=None):
     """递归打印目录树并统计行数"""
     if stats is None:
-        stats = {"total_lines": 0, "total_files": 0}
+        stats = {"total_lines": 0, "total_files": 0, "large_files": []}
     
     # 获取目录下的所有项目（文件和子目录）
     try:
@@ -51,11 +51,13 @@ def print_tree(directory, prefix="", is_last=True, stats=None):
         if item.is_dir():
             print(f"{prefix}{connector}{item.name}/")
             # 递归处理子目录
-            stats = print_tree(item, prefix + ("    " if is_last_item else "│   "), True, stats)
+            stats = print_tree(item, prefix + ("    " if is_last_item else "│   "), True, stats, threshold)
         else:
             line_count = count_lines_in_file(item)
             stats["total_lines"] += line_count
             stats["total_files"] += 1
+            if threshold is not None and line_count > threshold:
+                stats["large_files"].append((str(item), line_count))
             print(f"{prefix}{connector}{item.name} ({line_count} 行)")
     
     return stats
@@ -64,17 +66,34 @@ def main():
     # 获取当前目录
     current_dir = Path.cwd()
     
+    # 解析命令行参数
+    threshold = None
+    if len(sys.argv) > 1:
+        try:
+            threshold = int(sys.argv[1])
+        except ValueError:
+            print("警告: 参数必须是整数，忽略参数")
+    
     print(f"项目源码行数统计 - {current_dir.name}/")
     print("=" * 60)
     
     # 统计信息
-    stats = {"total_lines": 0, "total_files": 0}
+    stats = {"total_lines": 0, "total_files": 0, "large_files": []}
     
     # 打印目录树
-    stats = print_tree(current_dir, "", True, stats)
+    stats = print_tree(current_dir, "", True, stats, threshold)
     
     print("=" * 60)
     print(f"总计: {stats['total_files']} 个文件, {stats['total_lines']} 行代码")
+    
+    # 如果设置了阈值，打印超过阈值的文件
+    if threshold is not None:
+        print(f"\n行数超过 {threshold} 的文件:")
+        if stats['large_files']:
+            for file_path, line_count in stats['large_files']:
+                print(f"  {file_path}: {line_count} 行")
+        else:
+            print("  没有文件超过指定行数")
     
     # 按文件类型统计
     print("\n按文件类型统计:")

@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import DomainMap from './pages/DomainMap/DomainMap'
 import DomainWorkbench from './pages/DomainWorkbench/DomainWorkbench'
 import ModelDetail from './pages/ModelDetail/ModelDetail'
+import ETLManager from './pages/ETLManager/ETLManager'
 
 function App() {
   return (
@@ -11,6 +12,7 @@ function App() {
           <Route path="/" element={<DomainMap />} />
           <Route path="/domain/:domainId" element={<DomainWorkbench />} />
           <Route path="/model/:modelId" element={<ModelDetail />} />
+          <Route path="/etl" element={<ETLManager />} />
         </Routes>
       </div>
     </Router>
