@@ -21,6 +21,8 @@ const DatasourceModal = ({
       name: '',
       type: 'mysql',
       url: '',
+      username: '',
+      password: '',
       tableName: '',
       status: 'inactive',
       description: ''
@@ -112,16 +114,38 @@ const DatasourceModal = ({
             </div>
           </Form.Item>
         ) : (
-          <Form.Item
-            label="URL *"
-            rules={[{ required: true, message: '请输入数据源URL' }]}
-          >
-            <Input
-              value={newDatasource.url}
-              onChange={(e) => setNewDatasource({ ...newDatasource, url: e.target.value })}
-              placeholder="例如: jdbc:mysql://localhost:3306/database"
-            />
-          </Form.Item>
+          <>
+            <Form.Item
+              label="URL *"
+              rules={[{ required: true, message: '请输入数据源URL' }]}
+            >
+              <Input
+                value={newDatasource.url}
+                onChange={(e) => setNewDatasource({ ...newDatasource, url: e.target.value })}
+                placeholder="例如: jdbc:mysql://localhost:3306/database"
+              />
+            </Form.Item>
+            
+            <Form.Item
+              label="用户名"
+            >
+              <Input
+                value={newDatasource.username}
+                onChange={(e) => setNewDatasource({ ...newDatasource, username: e.target.value })}
+                placeholder="请输入数据源用户名"
+              />
+            </Form.Item>
+            
+            <Form.Item
+              label="密码"
+            >
+              <Input.Password
+                value={newDatasource.password}
+                onChange={(e) => setNewDatasource({ ...newDatasource, password: e.target.value })}
+                placeholder="请输入数据源密码"
+              />
+            </Form.Item>
+          </>
         )}
         
         <Form.Item label="表名/主题名">

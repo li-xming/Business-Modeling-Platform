@@ -20,9 +20,16 @@ def get_functions():
         result = []
         for row in functions:
             import json
-            # 解析JSON字符串
-            inputSchema = json.loads(row[5]) if row[5] else {}
-            metadata = json.loads(row[7]) if row[7] else {}
+            # 解析JSON字符串，添加异常处理
+            try:
+                inputSchema = json.loads(row[4]) if row[4] else {}
+            except json.JSONDecodeError:
+                inputSchema = {}
+            
+            try:
+                metadata = json.loads(row[7]) if row[7] else {}
+            except json.JSONDecodeError:
+                metadata = {}
             
             result.append({
                 "id": row[0],
@@ -30,12 +37,12 @@ def get_functions():
                 "description": row[2],
                 "code": row[3],
                 "inputSchema": inputSchema,
-                "returnType": row[6],
-                "version": row[8],
+                "returnType": row[5],
+                "version": row[6],
                 "metadata": metadata,
-                "domainId": row[9],
-                "createdAt": row[10],
-                "updatedAt": row[11]
+                "domainId": row[8],
+                "createdAt": row[9],
+                "updatedAt": row[10]
             })
         
         return jsonify(result)

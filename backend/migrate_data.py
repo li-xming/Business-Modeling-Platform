@@ -634,6 +634,22 @@ def create_tables(conn):
     )
     """)
     
+    # 创建字段映射表
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS mappings (
+        id INTEGER PRIMARY KEY,
+        datasourceId INTEGER NOT NULL,
+        modelId INTEGER NOT NULL,
+        fieldId VARCHAR(100) NOT NULL,
+        propertyId INTEGER NOT NULL,
+        createdAt DATE,
+        updatedAt DATE,
+        FOREIGN KEY (datasourceId) REFERENCES datasources(id),
+        FOREIGN KEY (modelId) REFERENCES models(id),
+        FOREIGN KEY (propertyId) REFERENCES properties(id)
+    )
+    """)
+    
     print("数据库表创建完成")
 
 def insert_data(conn, data):

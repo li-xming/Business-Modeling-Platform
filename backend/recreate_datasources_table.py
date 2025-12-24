@@ -24,6 +24,8 @@ def recreate_datasources_table():
             name VARCHAR(100) NOT NULL,
             type VARCHAR(50) NOT NULL,
             url TEXT NOT NULL,
+            username VARCHAR(100),
+            password VARCHAR(100),
             tableName VARCHAR(100),
             status VARCHAR(50),
             description TEXT,
@@ -41,11 +43,11 @@ def recreate_datasources_table():
             print("向新表插入默认数据...")
             # 直接插入默认数据，不迁移旧数据，避免类型转换问题
             conn.execute("""
-            INSERT INTO datasources_new (id, name, type, url, tableName, status, description, modelId, domainId, createdAt, updatedAt) 
+            INSERT INTO datasources_new (id, name, type, url, username, password, tableName, status, description, modelId, domainId, createdAt, updatedAt) 
             VALUES 
-            (1, '路段业主MySQL', 'mysql', 'jdbc:mysql://localhost:3306/expressway', 't_road_owner', 'active', '路段业主信息表', 1, 3, '2025-12-22', '2025-12-22'),
-            (2, '收费公路MySQL', 'mysql', 'jdbc:mysql://localhost:3306/expressway', 't_toll_road', 'active', '收费公路信息表', 2, 3, '2025-12-22', '2025-12-22'),
-            (3, '收费站MySQL', 'mysql', 'jdbc:mysql://localhost:3306/expressway', 't_toll_station', 'active', '收费站信息表', 3, 3, '2025-12-22', '2025-12-22')
+            (1, '路段业主MySQL', 'mysql', 'jdbc:mysql://localhost:3306/expressway', 'root', 'password', 't_road_owner', 'active', '路段业主信息表', 1, 3, '2025-12-22', '2025-12-22'),
+            (2, '收费公路MySQL', 'mysql', 'jdbc:mysql://localhost:3306/expressway', 'root', 'password', 't_toll_road', 'active', '收费公路信息表', 2, 3, '2025-12-22', '2025-12-22'),
+            (3, '收费站MySQL', 'mysql', 'jdbc:mysql://localhost:3306/expressway', 'root', 'password', 't_toll_station', 'active', '收费站信息表', 3, 3, '2025-12-22', '2025-12-22')
             """)
         else:
             print("旧表不存在，创建空表...")

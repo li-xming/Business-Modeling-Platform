@@ -485,7 +485,7 @@ const ModelDetail = () => {
       });
     
     // 获取模型绑定的指标
-    fetch(`/api/model/${modelId}/indicator`)
+    fetch(`/api/indicator/model/${modelId}`)
       .then(response => response.json())
       .then(indicatorData => {
         // 确保返回的是数组
@@ -671,6 +671,8 @@ const ModelDetail = () => {
               setMappingDatasource(datasource);
               setIsMappingModalOpen(true);
             }}
+            // 传递modelId属性
+            modelId={modelId}
             // 新增关联表功能相关属性
             domainDatasources={domainDatasources}
             isTableAssociationModalOpen={isTableAssociationModalOpen}
@@ -811,6 +813,7 @@ const ModelDetail = () => {
         modelProperties={properties}
         modelId={modelId}
         setMappingDatasource={setMappingDatasource}
+        setIsMappingModalOpen={setIsMappingModalOpen}
         
         // Other Props
         properties={properties}

@@ -12,6 +12,7 @@ const DatasourceManager = ({
   newDatasource, 
   setNewDatasource,
   onMappingClick,
+  modelId,
   // 新增关联表功能相关属性
   domainDatasources,
   isTableAssociationModalOpen,
@@ -280,7 +281,7 @@ const DatasourceManager = ({
                     // 查询数据源下的表列表
                     if (datasource) {
                       // 先检查数据源连通性
-                      fetch(`/api/datasource/${datasource.id}/test-connection`)
+                      fetch(`/api/datasource/${datasource.id}/test`, { method: 'POST' })
                         .then(response => {
                           if (!response.ok) {
                             throw new Error(`HTTP error! status: ${response.status}`);
@@ -302,8 +303,18 @@ const DatasourceManager = ({
                           return response.json();
                         })
                         .then(tableData => {
-                          setTablesInDatasource(tableData);
-                          showNotification('成功获取表列表');
+                          if (tableData.success) {
+                            // 将后端返回的表名数组转换为前端期望的格式
+                            const formattedTables = tableData.tables.map((tableName, index) => ({
+                              id: index + 1,
+                              name: tableName,
+                              description: ''
+                            }));
+                            setTablesInDatasource(formattedTables);
+                            showNotification('成功获取表列表');
+                          } else {
+                            throw new Error(tableData.message || '获取表列表失败');
+                          }
                         })
                         .catch(error => {
                           console.error('Failed to fetch tables:', error);
@@ -333,7 +344,7 @@ const DatasourceManager = ({
                             // 查询数据源下的表列表
                             if (datasource) {
                               // 先检查数据源连通性
-                              fetch(`/api/datasource/${datasource.id}/test-connection`)
+                              fetch(`/api/datasource/${datasource.id}/test`, { method: 'POST' })
                                 .then(response => {
                                   if (!response.ok) {
                                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -355,8 +366,18 @@ const DatasourceManager = ({
                                   return response.json();
                                 })
                                 .then(tableData => {
-                                  setTablesInDatasource(tableData);
-                                  showNotification('成功获取表列表');
+                                  if (tableData.success) {
+                                    // 将后端返回的表名数组转换为前端期望的格式
+                                    const formattedTables = tableData.tables.map((tableName, index) => ({
+                                      id: index + 1,
+                                      name: tableName,
+                                      description: ''
+                                    }));
+                                    setTablesInDatasource(formattedTables);
+                                    showNotification('成功获取表列表');
+                                  } else {
+                                    throw new Error(tableData.message || '获取表列表失败');
+                                  }
                                 })
                                 .catch(error => {
                                   console.error('Failed to fetch tables:', error);
@@ -408,12 +429,29 @@ const DatasourceManager = ({
                                     // 关联表逻辑：将选中的表关联到当前模型
                                     const newAssociation = {
                                       ...selectedDomainDatasource,
-                                      tableName: table.name
+                                      tableName: table.name,
+                                      modelId: parseInt(modelId),
+                                      domainId: selectedDomainDatasource.domainId,
+                                      status: 'active'
                                     };
-                                    // 添加到当前模型的数据源列表
-                                    setDatasources([...datasources, newAssociation]);
-                                    showNotification(`成功关联表 "${table.name}"`);
-                                    setIsTableAssociationModalOpen(false);
+                                    
+                                    // 调用API保存到数据库
+                                    fetch('/api/datasource', {
+                                      method: 'POST',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify(newAssociation)
+                                    })
+                                      .then(response => response.json())
+                                      .then(savedDatasource => {
+                                        // 添加到当前模型的数据源列表
+                                        setDatasources([...datasources, savedDatasource]);
+                                        showNotification(`成功关联表 "${table.name}"`);
+                                        setIsTableAssociationModalOpen(false);
+                                      })
+                                      .catch(error => {
+                                        console.error('Failed to associate table:', error);
+                                        showNotification('关联表失败：' + error.message, 'error');
+                                      });
                                   }}
                                 >
                                   关联

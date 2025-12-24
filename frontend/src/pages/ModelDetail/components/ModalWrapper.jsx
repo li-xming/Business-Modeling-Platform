@@ -55,6 +55,7 @@ const ModalWrapper = ({
   modelProperties,
   modelId,
   setMappingDatasource,
+  setIsMappingModalOpen,
   
   // Other Props
   properties,

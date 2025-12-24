@@ -41,23 +41,28 @@ def get_model_id_by_name(model_name, mock_data):
     return None
 
 # 测试数据库连接
-def test_database_connection(datasource_type, url):
+def test_database_connection(datasource_type, url, username=None, password=None):
     """
     测试数据库连接
     :param datasource_type: 数据源类型（mysql, postgresql, sqlserver等）
     :param url: 数据库连接URL
+    :param username: 数据库用户名（可选）
+    :param password: 数据库密码（可选）
     :return: tuple (success, message)
     """
     try:
         if datasource_type == 'mysql':
-            # MySQL连接URL格式：mysql://username:password@host:port/database
+            # MySQL连接URL格式：jdbc:mysql://host:port/database 或 mysql://host:port/database
             from urllib.parse import urlparse
+            # 处理jdbc前缀
+            if url.startswith('jdbc:'):
+                url = url[5:]
             parsed_url = urlparse(url)
             conn = pymysql.connect(
                 host=parsed_url.hostname,
                 port=parsed_url.port or 3306,
-                user=parsed_url.username,
-                password=parsed_url.password,
+                user=username or parsed_url.username,
+                password=password or parsed_url.password,
                 database=parsed_url.path.lstrip('/')
             )
             conn.close()
@@ -80,24 +85,29 @@ def test_database_connection(datasource_type, url):
         return False, f"连接测试失败: {str(e)}"
 
 # 获取数据库表列表
-def get_database_tables(datasource_type, url):
+def get_database_tables(datasource_type, url, username=None, password=None):
     """
     获取数据库中的表列表
     :param datasource_type: 数据源类型（mysql, postgresql, sqlserver等）
     :param url: 数据库连接URL
+    :param username: 数据库用户名（可选）
+    :param password: 数据库密码（可选）
     :return: tuple (success, tables or message)
     """
     try:
         tables = []
         if datasource_type == 'mysql':
-            # MySQL连接URL格式：mysql://username:password@host:port/database
+            # MySQL连接URL格式：jdbc:mysql://host:port/database 或 mysql://host:port/database
             from urllib.parse import urlparse
+            # 处理jdbc前缀
+            if url.startswith('jdbc:'):
+                url = url[5:]
             parsed_url = urlparse(url)
             conn = pymysql.connect(
                 host=parsed_url.hostname,
                 port=parsed_url.port or 3306,
-                user=parsed_url.username,
-                password=parsed_url.password,
+                user=username or parsed_url.username,
+                password=password or parsed_url.password,
                 database=parsed_url.path.lstrip('/')
             )
             with conn.cursor() as cursor:
