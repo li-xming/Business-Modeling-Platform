@@ -103,4 +103,6 @@ def delete_model_table_association(id):
         # 删除关联
         conn.execute("DELETE FROM model_table_associations WHERE id = ?", (id,))
         conn.commit()
-        return jsonify({"message": "Model-table association deleted", "succ
+        return jsonify({"message": "Model-table association deleted", "success": True})
+    finally:
+        conn.close()
