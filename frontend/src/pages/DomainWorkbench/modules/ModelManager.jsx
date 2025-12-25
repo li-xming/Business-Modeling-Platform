@@ -131,4 +131,4 @@ const ModelManager = ({
   );
 };
 
-export default
+export default ModelManager;

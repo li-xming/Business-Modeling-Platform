@@ -916,4 +916,10 @@ const ModelDetail = () => {
               }}>确定</button>
             </div>
           </div>
-  
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ModelDetail;

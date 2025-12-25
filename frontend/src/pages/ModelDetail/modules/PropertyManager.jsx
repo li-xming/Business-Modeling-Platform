@@ -321,4 +321,4 @@ const PropertyManager = ({
   );
 };
 
-export
+export default PropertyManager;
