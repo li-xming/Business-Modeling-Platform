@@ -16,6 +16,8 @@ const MappingModal = ({
   const [selectedField, setSelectedField] = useState(null); // 选中的字段
   const [selectedProperty, setSelectedProperty] = useState(null); // 选中的属性
   const [tableStructure, setTableStructure] = useState(null); // 表结构数据
+  const [selectedNode, setSelectedNode] = useState(null); // 选中的节点，用于键盘移动
+  const [nodes, setNodes] = useState([]); // 保存节点数据，用于键盘移动节点
 
   // 从API获取真实的表结构数据
   useEffect(() => {
@@ -35,12 +37,12 @@ const MappingModal = ({
                 id: `table_${datasource.id}_${datasource.tableName}`,
                 name: datasource.tableName || 'unknown_table',
                 fields: (tableSchema.fields || []).map((field, index) => ({
-                  id: `field_${index + 1}`,
-                  name: field.column_name,
-                  type: field.data_type,
-                  isPrimaryKey: field.is_primary_key || false,
-                  isForeignKey: field.is_foreign_key || false
-                }))
+                    id: field.column_name,
+                    name: field.column_name,
+                    type: field.data_type,
+                    isPrimaryKey: field.is_primary_key || false,
+                    isForeignKey: field.is_foreign_key || false
+                  }))
               }
             ],
             relations: [] // 表之间的关系
@@ -138,12 +140,12 @@ const MappingModal = ({
     svg.selectAll('*').remove();
 
     // 准备节点和连线数据
-    const nodes = [];
+    const newNodes = [];
     const links = [];
 
     // 添加数据源表节点（左侧）
     tableStructure.tables.forEach(table => {
-      nodes.push({
+      newNodes.push({
         id: table.id,
         name: table.name,
         type: 'table',
@@ -165,7 +167,7 @@ const MappingModal = ({
         property: prop
       }));
       
-      nodes.push({
+      newNodes.push({
         id: 'model_table',
         name: model.name || '模型',
         type: 'model',
@@ -174,6 +176,10 @@ const MappingModal = ({
         y: height / 2
       });
     }
+
+    // 保存节点数据到state
+    setNodes(newNodes);
+    const nodes = newNodes;
 
 
 
@@ -312,7 +318,19 @@ const MappingModal = ({
       .call(d3.drag()
         .on('start', dragstarted)
         .on('drag', dragged)
-        .on('end', dragended));
+        .on('end', dragended))
+      .on('click', (event, d) => {
+        event.stopPropagation();
+        // 选中节点
+        setSelectedNode(d);
+        // 高亮显示选中节点
+        nodeGroup.selectAll('rect.model-border, rect.table-header, rect.property-header')
+          .attr('stroke', '#10b981')
+          .attr('stroke-width', 2);
+        d3.select(event.currentTarget).select('rect.model-border, rect.table-header, rect.property-header')
+          .attr('stroke', '#f59e0b')
+          .attr('stroke-width', 3);
+      });
 
     // 绘制表节点
     const tableNodes = nodeGroup.filter(d => d.type === 'table');
@@ -776,8 +794,9 @@ const MappingModal = ({
 
     function dragended(event, d) {
       if (!event.active) simulation.alphaTarget(0);
-      d.fx = null;
-      d.fy = null;
+      // 保存节点的最终位置，不重置为null，防止弹回初始位置
+      // d.fx = null;
+      // d.fy = null;
     }
 
     // 窗口大小变化
@@ -790,10 +809,103 @@ const MappingModal = ({
     };
 
     window.addEventListener('resize', handleResize);
+    
+    // 键盘事件处理函数 - 控制ER图上下左右挪动
+    const handleKeyDown = (event) => {
+      // 只有当模态框打开且ER图容器有焦点时才处理
+      const containerElement = container.node();
+      if (!containerElement) return;
+      
+      const scrollSpeed = 20; // 滚动速度
+      const nodeMoveSpeed = 10; // 节点移动速度
+      
+      // 如果有选中节点，使用方向键移动节点
+      if (selectedNode) {
+        const nodeIndex = nodes.findIndex(n => n.id === selectedNode.id);
+        if (nodeIndex !== -1) {
+          const node = nodes[nodeIndex];
+          
+          switch (event.key) {
+            case 'ArrowUp':
+              node.y -= nodeMoveSpeed;
+              // 更新节点的固定位置
+              node.fy = node.y;
+              // 更新节点在DOM中的位置
+              d3.selectAll(`.node.${node.type}-node`)
+                .filter(d => d.id === node.id)
+                .attr('transform', `translate(${node.x},${node.y})`);
+              // 重启模拟以更新连线
+              simulation.alpha(0.3).restart();
+              event.preventDefault();
+              break;
+            case 'ArrowDown':
+              node.y += nodeMoveSpeed;
+              node.fy = node.y;
+              d3.selectAll(`.node.${node.type}-node`)
+                .filter(d => d.id === node.id)
+                .attr('transform', `translate(${node.x},${node.y})`);
+              simulation.alpha(0.3).restart();
+              event.preventDefault();
+              break;
+            case 'ArrowLeft':
+              node.x -= nodeMoveSpeed;
+              node.fx = node.x;
+              d3.selectAll(`.node.${node.type}-node`)
+                .filter(d => d.id === node.id)
+                .attr('transform', `translate(${node.x},${node.y})`);
+              simulation.alpha(0.3).restart();
+              event.preventDefault();
+              break;
+            case 'ArrowRight':
+              node.x += nodeMoveSpeed;
+              node.fx = node.x;
+              d3.selectAll(`.node.${node.type}-node`)
+                .filter(d => d.id === node.id)
+                .attr('transform', `translate(${node.x},${node.y})`);
+              simulation.alpha(0.3).restart();
+              event.preventDefault();
+              break;
+          }
+        }
+      } else {
+        // 没有选中节点时，控制容器滚动
+        switch (event.key) {
+          case 'ArrowUp':
+            containerElement.scrollTop -= scrollSpeed;
+            event.preventDefault();
+            break;
+          case 'ArrowDown':
+            containerElement.scrollTop += scrollSpeed;
+            event.preventDefault();
+            break;
+          case 'ArrowLeft':
+            containerElement.scrollLeft -= scrollSpeed;
+            event.preventDefault();
+            break;
+          case 'ArrowRight':
+            containerElement.scrollLeft += scrollSpeed;
+            event.preventDefault();
+            break;
+        }
+      }
+    };
+    
+    // 为ER图容器添加键盘事件监听
+    const containerElement = container.node();
+    if (containerElement) {
+      containerElement.addEventListener('keydown', handleKeyDown);
+      containerElement.tabIndex = 0; // 使容器可以获取焦点
+      containerElement.focus(); // 自动获取焦点
+    }
+    
     return () => {
       window.removeEventListener('resize', handleResize);
       svg.on('mousemove', null);
       svg.on('mouseup', null);
+      // 移除键盘事件监听
+      if (containerElement) {
+        containerElement.removeEventListener('keydown', handleKeyDown);
+      }
     };
   }, [isOpen, tableStructure, modelProperties, mappings, draggingFrom, model]);
 
@@ -807,8 +919,8 @@ const MappingModal = ({
 
   return (
     <div className="modal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div className="modal-content" style={{ width: '90vw', height: '90vh', maxWidth: '1400px', maxHeight: '900px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+      <div className="modal-content" style={{ width: '95vw', height: '95vh', maxWidth: '1600px', maxHeight: '950px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
           <h2>字段映射 - {datasource?.name}</h2>
           <div>
             <button onClick={saveMappings} style={{ marginRight: '10px', padding: '8px 16px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
@@ -823,10 +935,10 @@ const MappingModal = ({
           </div>
         </div>
         
-        <div style={{ display: 'flex', gap: '20px', height: 'calc(100% - 80px)' }}>
+        <div style={{ display: 'flex', gap: '20px', height: 'calc(100% - 60px)' }}>
           {/* ER图区域 */}
-          <div ref={containerRef} style={{ flex: 1, border: '1px solid #e0e0e0', borderRadius: '8px', backgroundColor: '#f8f9fa', position: 'relative' }}>
-            <svg ref={svgRef} style={{ width: '100%', height: '100%' }}></svg>
+          <div ref={containerRef} style={{ flex: 1, border: '1px solid #e0e0e0', borderRadius: '8px', backgroundColor: '#f8f9fa', position: 'relative', overflow: 'auto' }}>
+            <svg ref={svgRef} style={{ width: '100%', height: 'auto', minHeight: '1000px' }}></svg>
             <div style={{ position: 'absolute', top: '10px', left: '10px', backgroundColor: 'rgba(255,255,255,0.9)', padding: '10px', borderRadius: '4px', fontSize: '12px', zIndex: 10 }}>
               <div style={{ marginBottom: '5px' }}><strong>操作提示：</strong></div>
               <div>• 左侧：数据源表ER图</div>
@@ -839,7 +951,7 @@ const MappingModal = ({
           </div>
           
           {/* 映射列表区域 */}
-          <div style={{ width: '300px', border: '1px solid #e0e0e0', borderRadius: '8px', padding: '20px', backgroundColor: '#fff', overflowY: 'auto' }}>
+          <div style={{ width: '300px', height: '100%', border: '1px solid #e0e0e0', borderRadius: '8px', padding: '20px', backgroundColor: '#fff', overflowY: 'auto' }}>
             <h3 style={{ marginTop: 0 }}>映射关系</h3>
             {mappings.length === 0 ? (
               <div style={{ color: '#999', textAlign: 'center', padding: '20px' }}>暂无映射关系</div>

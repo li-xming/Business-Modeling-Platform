@@ -176,8 +176,51 @@ const ModelMap = ({
         svg.attr('width', newWidth).attr('height', newHeight);
       };
       
+      // 键盘事件处理函数 - 控制ER图上下左右挪动
+      const handleKeyDown = (event) => {
+        // 只有当ER图容器有焦点时才处理
+        const containerElement = container.node();
+        if (!containerElement) return;
+        
+        const scrollSpeed = 20; // 滚动速度
+        
+        switch (event.key) {
+          case 'ArrowUp':
+            containerElement.scrollTop -= scrollSpeed;
+            event.preventDefault();
+            break;
+          case 'ArrowDown':
+            containerElement.scrollTop += scrollSpeed;
+            event.preventDefault();
+            break;
+          case 'ArrowLeft':
+            containerElement.scrollLeft -= scrollSpeed;
+            event.preventDefault();
+            break;
+          case 'ArrowRight':
+            containerElement.scrollLeft += scrollSpeed;
+            event.preventDefault();
+            break;
+        }
+      };
+      
       window.addEventListener('resize', handleResize);
-      return () => window.removeEventListener('resize', handleResize);
+      
+      // 为ER图容器添加键盘事件监听
+      const containerElement = container.node();
+      if (containerElement) {
+        containerElement.addEventListener('keydown', handleKeyDown);
+        containerElement.tabIndex = 0; // 使容器可以获取焦点
+        containerElement.focus(); // 自动获取焦点
+      }
+      
+      return () => {
+        window.removeEventListener('resize', handleResize);
+        // 移除键盘事件监听
+        if (containerElement) {
+          containerElement.removeEventListener('keydown', handleKeyDown);
+        }
+      };
   }, [allData, isPropertyExpanded, activeTab, searchTerm, showRelations, displayMode]);
 
   // 切换显示模式
