@@ -443,4 +443,4 @@ const ETLConfigurator = () => {
   );
 };
 
-export def
+export default ETLConfigurator;
