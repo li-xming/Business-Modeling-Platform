@@ -11,7 +11,9 @@ const ModelManager = ({
   viewMode,
   setViewMode,
   setIsModalOpen,
-  setEditingModel
+  setEditingModel,
+  handleModelExport,
+  handleModelImport
 }) => {
   const navigate = useNavigate();
   
@@ -41,8 +43,8 @@ const ModelManager = ({
           onChange={(e) => setSearchTerm(e.target.value)}
         />
         <button onClick={() => { setIsModalOpen(true); setEditingModel(null); }}>新建模型</button>
-        <button onClick={() => console.log('导入模型')}>导入</button>
-        <button onClick={() => console.log('导出模型')}>导出</button>
+        <button onClick={handleModelImport}>导入</button>
+        <button onClick={handleModelExport}>导出</button>
         <button 
           onClick={() => setViewMode(viewMode === 'table' ? 'card' : 'table')}
           className="view-toggle"
@@ -129,4 +131,4 @@ const ModelManager = ({
   );
 };
 
-export default ModelManager;
+export default

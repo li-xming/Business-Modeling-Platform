@@ -156,6 +156,57 @@ const ModelDetail = () => {
   const closeConfirmDialog = () => {
     setConfirmDialog({ show: false, title: '', message: '', onConfirm: null });
   };
+  
+  // 通用导出函数
+  const handleExport = (data, filename) => {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+    showNotification('导出成功');
+  };
+  
+  // 通用导入函数
+  const handleImport = (callback) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const data = JSON.parse(event.target.result);
+            callback(data);
+            showNotification('导入成功');
+          } catch (error) {
+            console.error('Failed to parse import data:', error);
+            showNotification('导入失败，文件格式错误', 'error');
+          }
+        };
+        reader.readAsText(file);
+      }
+    };
+    input.click();
+  };
+  
+  // 属性导出函数
+  const handlePropertyExport = () => {
+    handleExport(properties, `properties_model_${modelId}.json`);
+  };
+  
+  // 属性导入函数
+  const handlePropertyImport = () => {
+    handleImport((data) => {
+      // 实际项目中应该调用API导入数据
+      console.log('Imported properties:', data);
+      // 这里只是模拟，实际应该调用API后刷新数据
+    });
+  };
 
   // 生成血缘分析数据
   const generateBloodlineData = () => {
@@ -650,6 +701,8 @@ const ModelDetail = () => {
             setSelectedProperties={setSelectedProperties}
             viewMode={propertyViewMode}
             setViewMode={setPropertyViewMode}
+            handlePropertyExport={handlePropertyExport}
+            handlePropertyImport={handlePropertyImport}
           />
         )}
 
@@ -863,10 +916,4 @@ const ModelDetail = () => {
               }}>确定</button>
             </div>
           </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default ModelDetail;
+  

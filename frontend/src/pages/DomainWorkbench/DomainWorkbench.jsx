@@ -1048,6 +1048,8 @@ const DomainWorkbench = () => {
             setViewMode={setModelViewMode}
             setIsModalOpen={setIsModalOpen}
             setEditingModel={setEditingModel}
+            handleModelExport={handleModelExport}
+            handleModelImport={handleModelImport}
           />
         )}
 
@@ -1061,6 +1063,8 @@ const DomainWorkbench = () => {
             handleDeleteAttr={handleDeleteAttr}
             viewMode={attributeViewMode}
             setViewMode={setAttributeViewMode}
+            handleAttrExport={handleAttrExport}
+            handleAttrImport={handleAttrImport}
           />
         )}
         

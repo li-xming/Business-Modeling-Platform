@@ -8,7 +8,9 @@ const SharedAttributeManager = ({
   handleEditAttr, 
   handleDeleteAttr,
   viewMode,
-  setViewMode
+  setViewMode,
+  handleAttrExport,
+  handleAttrImport
 }) => {
   const filteredAttributes = sharedAttributes.filter(attr => 
     attr.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -40,8 +42,8 @@ const SharedAttributeManager = ({
           onChange={(e) => setSearchTerm(e.target.value)}
         />
         <button onClick={() => console.log('新建共享属性')}>新建属性</button>
-        <button onClick={() => console.log('导入共享属性')}>导入</button>
-        <button onClick={() => console.log('导出共享属性')}>导出</button>
+        <button onClick={handleAttrImport}>导入</button>
+        <button onClick={handleAttrExport}>导出</button>
         <button 
           onClick={() => setViewMode(viewMode === 'table' ? 'card' : 'table')}
           className="view-toggle"

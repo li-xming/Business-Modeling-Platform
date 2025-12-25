@@ -17,7 +17,9 @@ const PropertyManager = ({
   selectedProperties,
   setSelectedProperties,
   viewMode,
-  setViewMode
+  setViewMode,
+  handlePropertyExport,
+  handlePropertyImport
 }) => {
   // 处理创建属性
   const handleCreateProperty = () => {
@@ -215,8 +217,8 @@ const PropertyManager = ({
             // 这里应该连接到搜索状态
             onChange={(e) => console.log('搜索属性:', e.target.value)}
           />
-          <button onClick={() => console.log('导出属性')}>导出</button>
-          <button onClick={() => console.log('导入属性')}>导入</button>
+          <button onClick={handlePropertyExport}>导出</button>
+          <button onClick={handlePropertyImport}>导入</button>
         </div>
       </div>
       
@@ -319,4 +321,4 @@ const PropertyManager = ({
   );
 };
 
-export default PropertyManager;
+export
