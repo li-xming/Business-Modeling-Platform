@@ -196,8 +196,8 @@ def toggle_datasource(id):
         if not datasource:
             return jsonify({"error": "Datasource not found"}), 404
         
-        # 切换状态
-        new_status = "active" if datasource[5] == "inactive" else "inactive"
+        # 切换状态 - 注意：datasource[7]是status字段，而不是datasource[5]
+        new_status = "active" if datasource[7] == "inactive" else "inactive"
         conn.execute("UPDATE datasources SET status = ?, updatedAt = ? WHERE id = ?", (new_status, get_current_date(), id))
         
         # 返回更新后的数据源
@@ -278,6 +278,26 @@ def bind_datasource(id):
         print(f"绑定数据源失败: {e}")
         conn.rollback()
         return jsonify({"success": False, "message": f"绑定数据源失败: {str(e)}"}), 500
+    finally:
+        conn.close()
+
+@datasource_bp.route('/<int:id>/unbind', methods=['PUT'])
+def unbind_datasource(id):
+    """解绑数据源"""
+    conn = get_db_connection()
+    try:
+        # 清除全局目标数据源配置
+        conn.execute(
+            "UPDATE configs SET value = NULL, updatedAt = ? WHERE key = ?", 
+            (get_current_date(), 'global_target_datasource_id')
+        )
+        conn.commit()
+        
+        return jsonify({"success": True, "message": "数据源解绑成功"})
+    except Exception as e:
+        print(f"解绑数据源失败: {e}")
+        conn.rollback()
+        return jsonify({"success": False, "message": f"解绑数据源失败: {str(e)}"}), 500
     finally:
         conn.close()
 
@@ -390,6 +410,22 @@ def save_datasource_mappings(id):
                 )
         
         return jsonify({"message": "Mapping saved successfully", "success": True})
+    finally:
+        conn.close()
+
+@datasource_bp.route('/config/global_target_datasource_id', methods=['GET'])
+def get_global_target_datasource_id():
+    """获取全局目标数据源ID"""
+    conn = get_db_connection()
+    try:
+        result = conn.execute("SELECT value FROM configs WHERE key = ?", ('global_target_datasource_id',)).fetchone()
+        if result and result[0]:
+            return jsonify({"success": True, "value": result[0]})
+        else:
+            return jsonify({"success": True, "value": None})
+    except Exception as e:
+        print(f"获取全局目标数据源ID失败: {e}")
+        return jsonify({"success": False, "message": str(e)}), 500
     finally:
         conn.close()
 

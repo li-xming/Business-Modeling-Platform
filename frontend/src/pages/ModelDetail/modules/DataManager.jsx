@@ -164,7 +164,7 @@ const DataManager = ({
           </thead>
           <tbody>
             {dataRecords.length === 0 ? (
-              <tr>
+              <tr key="no-data">
                 <td colSpan={properties.length + 1} style={{ textAlign: 'center', padding: '20px' }}>
                   暂无数据
                 </td>
@@ -195,3 +195,4 @@ const DataManager = ({
   );
 };
 
+export default DataManager;

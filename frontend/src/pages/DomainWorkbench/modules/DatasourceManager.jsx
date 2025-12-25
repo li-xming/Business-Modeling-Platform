@@ -12,7 +12,8 @@ const DatasourceManager = ({
   handleBindDatasource,
   setIsDatasourceModalOpen,
   setEditingDatasource,
-  setNewDatasource
+  setNewDatasource,
+  boundDatasourceId
 }) => {
   // 过滤数据源
   const filteredDatasources = datasources.filter(datasource =>
@@ -49,6 +50,7 @@ const DatasourceManager = ({
               <th>类型</th>
               <th>URL</th>
               <th>状态</th>
+              <th>绑定状态</th>
               <th>描述</th>
               <th>操作</th>
             </tr>
@@ -73,6 +75,11 @@ const DatasourceManager = ({
                       {datasource.status === 'active' ? '启用' : '禁用'}
                     </span>
                   </td>
+                  <td>
+                    <span className={`status-badge ${datasource.id === boundDatasourceId ? 'bound' : ''}`}>
+                      {datasource.id === boundDatasourceId ? '已绑定全局' : '未绑定'}
+                    </span>
+                  </td>
                   <td>{datasource.description}</td>
                   <td>
                     <button className="edit" onClick={() => handleEditDatasource(datasource)}>编辑</button>
@@ -89,10 +96,10 @@ const DatasourceManager = ({
                       {datasource.status === 'active' ? '禁用' : '启用'}
                     </button>
                     <button 
-                      className="bind" 
+                      className={datasource.id === boundDatasourceId ? 'unbind-btn' : 'bind-btn'} 
                       onClick={() => handleBindDatasource(datasource)}
                     >
-                      绑定
+                      {datasource.id === boundDatasourceId ? '解绑' : '绑定'}
                     </button>
                     <button className="delete" onClick={() => handleDeleteDatasource(datasource.id)}>删除</button>
                   </td>
@@ -100,7 +107,7 @@ const DatasourceManager = ({
               ))
             ) : (
               <tr>
-                <td colSpan="7" style={{ textAlign: 'center', padding: '20px' }}>
+                <td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>
                   未找到数据源
                 </td>
               </tr>

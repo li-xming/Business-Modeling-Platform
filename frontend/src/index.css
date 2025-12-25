@@ -987,6 +987,12 @@ body {
   border: 1px solid var(--border-color);
 }
 
+.status-badge.bound {
+  background: var(--primary-light);
+  color: var(--primary-color);
+  border: 1px solid #bfdbfe;
+}
+
 /* 表格操作按钮样式 */
 .data-table td button {
   padding: 6px 14px;
@@ -1086,6 +1092,31 @@ body {
   background: var(--primary-hover);
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+/* 绑定和解绑按钮样式 */
+.data-table td button.bind-btn {
+  background: var(--primary-color);
+  color: white;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.data-table td button.bind-btn:hover {
+  background: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+.data-table td button.unbind-btn {
+  background: var(--danger-color);
+  color: white;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+}
+
+.data-table td button.unbind-btn:hover {
+  background: #dc2626;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
 }
 
 /* 内容区域 */
@@ -1307,5 +1338,4 @@ h4 {
 }
 
 .fade-in-up {
-  animation: fadeInUp var(--transition-base);
-}
+  animation

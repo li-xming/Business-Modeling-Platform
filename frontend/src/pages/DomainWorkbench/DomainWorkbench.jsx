@@ -13,6 +13,7 @@ import SharedAttributeModal from './components/SharedAttributeModal';
 import RelationModal from './components/RelationModal';
 import SemanticIndicatorModal from './components/SemanticIndicatorModal';
 import DatasourceModal from './components/DatasourceModal';
+import TableListModal from './components/TableListModal';
 import DatasourceManager from './modules/DatasourceManager';
 
 const DomainWorkbench = () => {
@@ -90,6 +91,27 @@ const DomainWorkbench = () => {
     status: 'inactive',
     description: ''
   });
+  // 当前绑定的数据源ID
+  const [boundDatasourceId, setBoundDatasourceId] = useState(null);
+  
+  // 获取当前绑定的数据源ID
+  useEffect(() => {
+    fetch('/api/datasource/config/global_target_datasource_id')
+      .then(response => response.json())
+      .then(data => {
+        if (data.success && data.value) {
+          setBoundDatasourceId(parseInt(data.value));
+        }
+      })
+      .catch(error => {
+        console.error('Failed to get bound datasource ID:', error);
+      });
+  }, []);
+
+  // 表列表模态框相关状态
+  const [isTableListModalOpen, setIsTableListModalOpen] = useState(false);
+  const [currentDatasource, setCurrentDatasource] = useState(null);
+  const [tableList, setTableList] = useState([]);
 
   // 显示通知
   const showNotification = (message, type = 'success') => {
@@ -818,9 +840,9 @@ const DomainWorkbench = () => {
       .then(response => response.json())
       .then(result => {
         if (result.success) {
-          // 这里可以添加显示数据表列表的逻辑，例如打开一个模态框
-          console.log(`数据源 ${datasource.name} 的数据表列表:`, result.tables);
-          showNotification(`数据源 "${datasource.name}" 包含 ${result.tables.length} 张表: ${result.tables.join(', ')}`);
+          setCurrentDatasource(datasource);
+          setTableList(result.tables);
+          setIsTableListModalOpen(true);
         } else {
           showNotification(`获取数据源 "${datasource.name}" 的数据表列表失败: ${result.message}`, 'error');
         }
@@ -831,22 +853,40 @@ const DomainWorkbench = () => {
       });
   };
 
-  // 处理绑定数据源为全局目标数据源
+  // 处理查看表数据
+  const handleViewTableData = (tableName) => {
+    if (currentDatasource) {
+      console.log(`查看数据源 ${currentDatasource.name} 中表 ${tableName} 的数据`);
+      showNotification(`查看表 ${tableName} 的数据功能待实现`);
+    }
+  };
+
+  // 处理绑定/解绑数据源为全局目标数据源
   const handleBindDatasource = (datasource) => {
-    fetch(`/api/datasource/${datasource.id}/bind`, {
+    const isBound = boundDatasourceId === datasource.id;
+    const endpoint = isBound ? `/api/datasource/${datasource.id}/unbind` : `/api/datasource/${datasource.id}/bind`;
+    
+    fetch(endpoint, {
       method: 'PUT'
     })
       .then(response => response.json())
       .then(result => {
         if (result.success) {
-          showNotification(`数据源 "${datasource.name}" 已成功绑定为全局目标数据源`);
+          // 更新绑定状态
+          if (isBound) {
+            setBoundDatasourceId(null);
+            showNotification(`数据源 "${datasource.name}" 已成功解绑`);
+          } else {
+            setBoundDatasourceId(datasource.id);
+            showNotification(`数据源 "${datasource.name}" 已成功绑定为全局目标数据源`);
+          }
         } else {
-          showNotification(`绑定数据源失败: ${result.message}`, 'error');
+          showNotification(`${isBound ? '解绑' : '绑定'}数据源失败: ${result.message}`, 'error');
         }
       })
       .catch(error => {
-        console.error('Failed to bind datasource:', error);
-        showNotification(`绑定数据源 "${datasource.name}" 失败`, 'error');
+        console.error(`Failed to ${isBound ? 'unbind' : 'bind'} datasource:`, error);
+        showNotification(`${isBound ? '解绑' : '绑定'}数据源 "${datasource.name}" 失败`, 'error');
       });
   };
 
@@ -1022,6 +1062,7 @@ const DomainWorkbench = () => {
             setIsDatasourceModalOpen={setIsDatasourceModalOpen}
             setEditingDatasource={setEditingDatasource}
             setNewDatasource={setNewDatasource}
+            boundDatasourceId={boundDatasourceId}
           />
         )}
       </div>
@@ -1089,6 +1130,15 @@ const DomainWorkbench = () => {
         handleSaveDatasource={handleSaveDatasource}
         setIsDatasourceModalOpen={setIsDatasourceModalOpen}
         setEditingDatasource={setEditingDatasource}
+      />
+      
+      {/* 表列表模态框 */}
+      <TableListModal 
+        isOpen={isTableListModalOpen}
+        onClose={() => setIsTableListModalOpen(false)}
+        datasourceName={currentDatasource?.name || ''}
+        tables={tableList}
+        onTableClick={handleViewTableData}
       />
     </div>
   );
